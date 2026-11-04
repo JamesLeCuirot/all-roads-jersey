@@ -39,6 +39,7 @@
   --path: #7a5ab8;
   --route-no: #f6c90e;
   --closed: #e0182d;
+  --diversion: #e08a00;
   --font-display: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
   --font-body: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
   --font-data: "JetBrains Mono", ui-monospace, Menlo, monospace;
@@ -118,6 +119,10 @@ input[type="search"] {
 .loading { position: absolute; inset: 0; min-height: 200px; display: grid; place-items: center; font-family: var(--font-data); font-size: 13px; color: var(--muted); }
 .tag { display: inline-flex; gap: 4px; align-items: center; font-size: 12.5px; border: 1px solid var(--line); border-radius: 3px; padding: 2px 4px 2px 8px; }
 .tag button { border: 0; background: none; color: var(--muted); cursor: pointer; font: inherit; padding: 0 4px; }
+.check { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13.5px; }
+.check input[type="checkbox"] { accent-color: var(--closed); width: 15px; height: 15px; margin: 0; }
+.check input[type="date"] { font: inherit; font-size: 13px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 3px; background: var(--land); color: var(--ink); }
+.tag.live { border-style: dashed; }
 .tag .no-entry { width: 10px; height: 10px; border-radius: 50%; background: var(--closed); flex: none; position: relative; }
 .tag .no-entry::after { content: ""; position: absolute; left: 2px; right: 2px; top: 4px; height: 2px; background: #fff; }
 .matches { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
@@ -161,8 +166,10 @@ input[type="search"] {
 
     <div class="group" data-for="closed">
       <span class="label" id="l-closed">Closed roads</span>
+      <label class="check"><input type="checkbox" id="live" checked> Roadworks closures on <input type="date" id="liveday" aria-label="Day of the roadworks closures"></label>
+      <p class="hint" id="livestatus"></p>
       <div class="chips" id="closedlist" role="group" aria-labelledby="l-closed"></div>
-      <p class="hint" id="closedhint">Click any road on the map to close it, and click it again to reopen it. The map shows the detours by car, and colours each route by the minutes the closures add.</p>
+      <p class="hint" id="closedhint">Click any road on the map to close it too, and click a closed road to reopen it. The map shows the detours by car, and colours each route by the minutes the closures add.</p>
       <div class="chips"><button type="button" id="reopen" hidden>Reopen all</button></div>
     </div>
 
@@ -243,7 +250,7 @@ input[type="search"] {
     </div>
     <p class="footnote" id="footnote">
       <span id="timing"></span><br>
-      Roads and paths: OpenStreetMap (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL), each used only by those allowed on it; driveways, car parks and private roads are left out. By car: every road a car can use, A roads up to 34 mph, B roads 27, C roads 25, other lanes 23, estate roads 18, green lanes 12, each capped at 85% of the posted limit, plus 3 seconds for every junction passed; one-way streets respected; no traffic, lights or queues for the tunnel. The 20 mph island cuts every higher limit to 20 mph, at the same 85%. Road closures shut a stretch of road between two junctions, both ways, for cars. By bike: 16 km/h on the flat (11 on rough tracks), slower uphill and up to 30 km/h down, plus 2 seconds a junction; bikes are pushed along footways and pedestrian streets and kept off steps; one-way streets respected unless bikes are let through. On foot: Tobler's hiking pace, 5 km/h on the flat, on every road, path and set of steps. Heights: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Mapzen terrain tiles</a> (EU-DEM, produced using Copernicus data and information funded by the European Union, and SRTM). People: each parish's 2021 census population (Statistics Jersey) spread over its homes by floor area, from OpenStreetMap buildings. Land: 50 m squares, each given to its nearest junction.
+      Roads and paths: OpenStreetMap (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL), each used only by those allowed on it; driveways, car parks and private roads are left out. By car: every road a car can use, A roads up to 34 mph, B roads 27, C roads 25, other lanes 23, estate roads 18, green lanes 12, each capped at 85% of the posted limit, plus 3 seconds for every junction passed; one-way streets respected; no traffic, lights or queues for the tunnel. The 20 mph island cuts every higher limit to 20 mph, at the same 85%. Road closures shut a stretch of road between two junctions, both ways, to through traffic; a journey may still start along a closed stretch, as someone living there would. The roadworks closures load in your browser from the Government of Jersey's roadworks map (<a href="https://roadworks.gov.je/JSW/roadworks.htm" target="_blank" rel="noopener">roadworks.gov.je</a>): works marked Road Closure that are approved or in progress on the chosen day, whatever their hours, matched to the roads they lie on; signed diversions are drawn for reference. Check the official map before you travel. By bike: 16 km/h on the flat (11 on rough tracks), slower uphill and up to 30 km/h down, plus 2 seconds a junction; bikes are pushed along footways and pedestrian streets and kept off steps; one-way streets respected unless bikes are let through. On foot: Tobler's hiking pace, 5 km/h on the flat, on every road, path and set of steps. Heights: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Mapzen terrain tiles</a> (EU-DEM, produced using Copernicus data and information funded by the European Union, and SRTM). People: each parish's 2021 census population (Statistics Jersey) spread over its homes by floor area, from OpenStreetMap buildings. Land: 50 m squares, each given to its nearest junction.
       Adapted from Doug Belshaw's <a href="https://roads.dougbelshaw.com" target="_blank" rel="noopener">All Roads Lead To (UK)</a>, after Ethan Mollick's <a href="https://all-roads-lead-to.netlify.app/" target="_blank" rel="noopener">US version</a> and “All Roads Lead to Richmond” by <a href="https://arterialmapping.wordpress.com/2022/03/20/all-roads-lead-to-richmond-2/" target="_blank" rel="noopener">Arterial Mapping</a>. <a href="https://github.com/JamesLeCuirot/all-roads-jersey" target="_blank" rel="noopener">Source code</a> (GPL-3.0).
     </p>
   </main>
@@ -257,7 +264,7 @@ const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v
 const BASE = /\/$|\.html?$/.test(location.pathname) ? "" : location.pathname.replace(/^.*\//, "") + "/";
 
 const S = { kind: "one", dest: null, destXY: null, destName: "", mode: "time", travel: "car", scope: "all", near: 8, weight: "area",
-  seeds: "churches", nbig: 8, picks: [], travellers: [], fair: "max", closed: [] };
+  seeds: "churches", nbig: 8, picks: [], travellers: [], fair: "max", closed: [], live: true, liveDay: "", liveOff: new Set() };
 let G = null; // graph
 const CAR_ONLY = new Set(["slow", "closed"]); // maps that compare car times only
 const M = () => CAR_ONLY.has(S.kind) ? "time" : S.mode;
@@ -502,7 +509,7 @@ function widthFor(f, total) { return Math.max(0.5, 0.5 + view.W / 58 * Math.pow(
 // draw a tree: flow[i] is the load on node i's outgoing tree arc
 function drawTree(t, flow, total, colorOf) {
   const g = G, items = [];
-  for (let i = 0; i < g.n; i++) if (t.arc[i] >= 0 && flow[i] > 0) items.push(i);
+  for (let i = 0; i < t.arc.length; i++) if (t.arc[i] >= 0 && flow[i] > 0) items.push(i);
   items.sort((a, b) => flow[a] - flow[b]);
   ctx.lineCap = "round"; ctx.lineJoin = "round";
   const buckets = new Map();
@@ -630,38 +637,171 @@ function renderSlow() {
     steps.map((m, k) => `<div class="row"><span class="sw" style="background:${ramp(m)}"></span>${m} min${k === steps.length - 1 ? " or more" : ""}</div>`).join("") +
     `<div class="row" style="margin-top:6px;color:var(--muted)">Lines show the quickest routes with every limit above ${G.slow} mph cut to ${G.slow}. Roads already at ${G.slow} mph or less don't change.</div>`;
 }
-// the closed stretches as edges: each closure is kept as a point on its road, so links survive a rebuild
+const baseName = (e) => (G.names[G.en[e]] || "").replace(/ \([^)]*\)$/, "");
+// which way a car drives along an edge: 1 with its geometry, -1 against, 0 both ways
+const carWay = (e) => { const f = G.ea[e] & 1, b = G.ea[e] & 2; return f && b ? 0 : f ? 1 : -1; };
+// on a dual carriageway, the other carriageway beside a point on one: the same road, one-way the opposite way, within 60 m
+function twinOf(hit) {
+  const nm = baseName(hit.e), way = carWay(hit.e);
+  if (!nm || !way) return null;
+  return nearestCarEdge(hit.x, hit.y, 0.06, (e, dx, dy) =>
+    e !== hit.e && carWay(e) !== 0 && baseName(e) === nm && (dx * hit.dx + dy * hit.dy) * carWay(e) * way < -0.5);
+}
+// close the stretch nearest a click, and the other carriageway beside it
+function closureAt(x, y, maxKm) {
+  const hit = nearestCarEdge(x, y, maxKm); if (!hit) return null;
+  const pts = [{ x: hit.x, y: hit.y, e: hit.e }], twin = twinOf(hit);
+  if (twin) pts.push({ x: twin.x, y: twin.y, e: twin.e });
+  return { pts, e: hit.e, x: hit.x, y: hit.y };
+}
+
+// ---------- roadworks closures, live from the Government of Jersey's roadworks map ----------
+const ROADWORKS = "https://roadworks.gov.je/arcgis/rest/services/JSW/MapServer/3/query";
+const todayISO = () => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`; };
+// Jersey Transverse Mercator (metres, GRS80) to longitude and latitude: the map serves its lines in JTM whatever is asked
+function jtmToLonLat(E, N) {
+  const A = 6378137, F = 1 / 298.257222101, e2 = 2 * F - F * F, ep2 = e2 / (1 - e2), k0 = 0.9999999;
+  const lat0 = 49.225 * Math.PI / 180, lon0 = -2.135 * Math.PI / 180;
+  const merid = (p) => A * ((1 - e2 / 4 - 3 * e2 ** 2 / 64 - 5 * e2 ** 3 / 256) * p - (3 * e2 / 8 + 3 * e2 ** 2 / 32 + 45 * e2 ** 3 / 1024) * Math.sin(2 * p)
+    + (15 * e2 ** 2 / 256 + 45 * e2 ** 3 / 1024) * Math.sin(4 * p) - (35 * e2 ** 3 / 3072) * Math.sin(6 * p));
+  const mu = (merid(lat0) + (N - 70000) / k0) / (A * (1 - e2 / 4 - 3 * e2 ** 2 / 64 - 5 * e2 ** 3 / 256));
+  const e1 = (1 - Math.sqrt(1 - e2)) / (1 + Math.sqrt(1 - e2));
+  const p1 = mu + (3 * e1 / 2 - 27 * e1 ** 3 / 32) * Math.sin(2 * mu) + (21 * e1 ** 2 / 16 - 55 * e1 ** 4 / 32) * Math.sin(4 * mu)
+    + (151 * e1 ** 3 / 96) * Math.sin(6 * mu) + (1097 * e1 ** 4 / 512) * Math.sin(8 * mu);
+  const s1 = Math.sin(p1), c1 = Math.cos(p1), C1 = ep2 * c1 * c1, T1 = Math.tan(p1) ** 2;
+  const N1 = A / Math.sqrt(1 - e2 * s1 * s1), R1 = A * (1 - e2) / (1 - e2 * s1 * s1) ** 1.5, D = (E - 40000) / (N1 * k0);
+  const lat = p1 - (N1 * Math.tan(p1) / R1) * (D * D / 2 - (5 + 3 * T1 + 10 * C1 - 4 * C1 * C1 - 9 * ep2) * D ** 4 / 24
+    + (61 + 90 * T1 + 298 * C1 + 45 * T1 * T1 - 252 * ep2 - 3 * C1 * C1) * D ** 6 / 720);
+  const lon = lon0 + (D - (1 + 2 * T1 + C1) * D ** 3 / 6 + (5 - 2 * C1 + 28 * T1 - 3 * C1 * C1 + 8 * ep2 + 24 * T1 * T1) * D ** 5 / 120) / c1;
+  return [lon * 180 / Math.PI, lat * 180 / Math.PI];
+}
+const jtmToKm = ([E, N]) => ll(...jtmToLonLat(E, N));
+const fmtJap = (s) => { const d = new Date(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8)); return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: d.getFullYear() === new Date().getFullYear() ? undefined : "numeric" }); };
+let liveLoading = null;
+async function loadLive(day) {
+  const d = day.replace(/-/g, "");
+  const where = `S_DATE <= '${d} 2359' AND E_DATE >= '${d} 0000' AND Status IN ('Approved','In Progress') AND D <> 11` +
+    ` AND Type IN ('Road Closure','Diversion (All Vehicles)','Diversion (Cars / Light Vehicles)')`;
+  const r = await fetch(ROADWORKS + "?" + new URLSearchParams({ where, outFields: "Location,S_DATE,E_DATE,Type,Timing,WorkType,Promoter", returnGeometry: "true", f: "json" }));
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const j = await r.json(); if (j.error) throw new Error(j.error.message || "query failed");
+  const groups = new Map(), diversions = [];
+  for (const f of j.features || []) {
+    const a = f.attributes, lines = (f.geometry?.paths || []).map((p) => p.map(jtmToKm));
+    if (/^Diversion/.test(a.Type)) { diversions.push(...lines); continue; }
+    const key = [a.Location, a.S_DATE, a.E_DATE, a.Timing].join("|");
+    let gr = groups.get(key);
+    if (!gr) {
+      const [parish, road] = a.Location.includes(" - ") ? a.Location.split(" - ") : ["", a.Location];
+      groups.set(key, gr = { key, road: road.replace(/`/g, "’").trim(), parish: parish.replace(/^St\.\s*/, "St ").trim(),
+        from: a.S_DATE, to: a.E_DATE, timing: a.Timing, work: a.WorkType, promoter: a.Promoter, lines: [] });
+    }
+    gr.lines.push(...lines);
+  }
+  const closures = [...groups.values()].filter((c) => c.lines.length);
+  for (const c of closures) {
+    c.edges = OFFROAD.test(c.road) ? [] : matchLines(c.lines, c.road);
+    const m = c.lines[0][Math.floor(c.lines[0].length / 2)]; c.x = m[0]; c.y = m[1];
+  }
+  return { day, closures: closures.filter((c) => c.edges.length), offroad: closures.filter((c) => !c.edges.length).length, diversions };
+}
+// closures of paths cars don't use: their lines may run beside a road, but don't close it
+const OFFROAD = /\b(cycle ?(path|track|way)|foot ?path|footway|promenade|slipway|steps|bridleway)\b/i;
+// names compared loosely: "La Grande Route de St Jean" and "La Grande Route de St. Jean (B31)" match
+const nameWords = (s) => new Set(fold(s).replace(/\([^)]*\)/g, " ").replace(/\bst\b\.?/g, "saint").replace(/[^a-z0-9 ]+/g, " ").split(/\s+/)
+  .filter((w) => w.length > 2 && !["rue", "route", "road", "lane", "chemin", "ruette", "des", "les", "the"].includes(w)));
+function sameName(a, b) {
+  const A = nameWords(a), B = nameWords(b); if (!A.size || !B.size) return false;
+  let k = 0; for (const w of A) if (B.has(w)) k++;
+  return k / Math.min(A.size, B.size) >= 0.5;
+}
+// the car roads a closure's lines lie along: sample every 10 m, take the nearest road running the same way within 20 m;
+// a road counts once two samples fall on it (one, for a closure under 20 m long), and a dual road closes both carriageways.
+// When some of those roads carry the closure's name, roads with another name are left open (a parallel street, a crossing).
+function matchLines(lines, road = "") {
+  const count = new Map(), first = new Map(); let n = 0;
+  for (const line of lines) for (let k = 0; k < line.length - 1; k++) {
+    const [x1, y1] = line[k], [x2, y2] = line[k + 1], L = Math.hypot(x2 - x1, y2 - y1); if (!L) continue;
+    const ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+    for (let j = 0, steps = Math.max(1, Math.round(L / 0.01)); j < steps; j++) {
+      const x = x1 + (x2 - x1) * (j + 0.5) / steps, y = y1 + (y2 - y1) * (j + 0.5) / steps; n++;
+      const hit = nearestCarEdge(x, y, 0.02, (e, dx, dy) => Math.abs(dx * ux + dy * uy) > 0.7);
+      if (hit) { count.set(hit.e, (count.get(hit.e) || 0) + 1); if (!first.has(hit.e)) first.set(hit.e, hit); }
+    }
+  }
+  let cand = [...count].filter(([e, c]) => c >= Math.min(2, n)).map(([e]) => e);
+  if (road && cand.some((e) => sameName(road, G.names[G.en[e]] || "")))
+    cand = cand.filter((e) => !G.en[e] || sameName(road, G.names[G.en[e]]));
+  const edges = new Set();
+  for (const e of cand) { edges.add(e); const tw = twinOf(first.get(e)); if (tw) edges.add(tw.e); }
+  return [...edges];
+}
+const liveReady = () => S.live && G.live && G.live.day === S.liveDay;
+const liveClosures = () => liveReady() ? G.live.closures.filter((c) => !S.liveOff.has(c.key)) : [];
+function ensureLive() {
+  if (!S.live || liveReady() || liveLoading === S.liveDay) return;
+  const day = liveLoading = S.liveDay;
+  $("#livestatus").textContent = "Loading the roadworks map…";
+  loadLive(day).then((live) => { G.live = live; }).catch((err) => { G.live = { day, error: String(err.message || err), closures: [], diversions: [], offroad: 0 }; })
+    .finally(() => { if (liveLoading === day) liveLoading = null; if (S.kind === "closed") render(); });
+}
+// Routes to the destination by car around closed stretches. Closures stop through traffic, but a journey may start along
+// closed stretches (to get off a closed street); it may end along them only when every way into the destination is closed.
+// Each junction has two states: 1, on open roads; 2, on the closed stretches at the start of the journey (searching backwards
+// from the destination, a closed arc moves 1 to 2, and once in 2 only closed arcs follow). Returns per-junction times and the
+// tree over (junction, state) pairs.
+function closedSearch(dest, closed) {
+  const g = G, n = g.n, nt = net("car"), cost = arcCost("car", "time");
+  const N = n * 3, dist = new Float64Array(N).fill(Infinity), varc = new Int32Array(N).fill(-1), par = new Int32Array(N).fill(-1);
+  const order = new Int32Array(N), done = new Uint8Array(N); let cnt = 0;
+  let open = false; for (let j = nt.inOff[dest]; j < nt.inOff[dest + 1]; j++) if (!closed[nt.inArc[j] >> 1]) open = true;
+  const start = dest + (open ? 1 : 0) * n; // state 0: arriving along closed stretches, only when there's no other way in
+  const h = new Heap(nt.inArc.length * 3 + 4); dist[start] = 0; h.push(0, start);
+  while (h.s) {
+    const v = h.pop(); if (done[v]) continue; done[v] = 1; order[cnt++] = v;
+    const u = v % n, st = (v / n) | 0, du = dist[v];
+    for (let j = nt.inOff[u]; j < nt.inOff[u + 1]; j++) {
+      const a = nt.inArc[j], c = closed[a >> 1];
+      const s2 = st === 0 ? (c ? 0 : 1) : st === 1 ? (c ? 2 : 1) : (c ? 2 : -1);
+      if (s2 < 0) continue;
+      const w = g.from(a) + s2 * n, nd = du + cost[a];
+      if (nd < dist[w]) { dist[w] = nd; varc[w] = a; par[w] = v; h.push(nd, w); }
+    }
+  }
+  const best = new Int32Array(n), d = new Float64Array(n), arc = new Int32Array(n);
+  for (let i = 0; i < n; i++) { let b = i; for (let k = 1; k < 3; k++) if (dist[i + k * n] < dist[b]) b = i + k * n; best[i] = b; d[i] = dist[b]; arc[i] = varc[b]; }
+  return { dist: d, arc, best, varc, par, order: order.subarray(0, cnt), start };
+}
+// the closed stretches as edges: a clicked closure is kept as a point on its road, so links survive a rebuild
 function closedEdges() {
   const mask = new Uint8Array(G.m);
   for (const c of S.closed) {
     for (const q of c.pts) { const hit = nearestCarEdge(q.x, q.y, 0.05); q.e = hit ? hit.e : -1; if (hit) mask[hit.e] = 1; }
     c.e = c.pts[0].e; c.x = c.pts[0].x; c.y = c.pts[0].y;
   }
+  for (const c of liveClosures()) for (const e of c.edges) mask[e] = 1;
   return mask;
 }
-const baseName = (e) => (G.names[G.en[e]] || "").replace(/ \([^)]*\)$/, "");
-// which way a car drives along an edge: 1 with its geometry, -1 against, 0 both ways
-const carWay = (e) => { const f = G.ea[e] & 1, b = G.ea[e] & 2; return f && b ? 0 : f ? 1 : -1; };
-// close the stretch nearest a click and, on a dual carriageway, the other carriageway beside it:
-// the same road, one-way the opposite way, within 60 m
-function closureAt(x, y, maxKm) {
-  const hit = nearestCarEdge(x, y, maxKm); if (!hit) return null;
-  const pts = [{ x: hit.x, y: hit.y, e: hit.e }], nm = baseName(hit.e), way = carWay(hit.e);
-  if (nm && way) {
-    const twin = nearestCarEdge(hit.x, hit.y, 0.06, (e, dx, dy) =>
-      e !== hit.e && carWay(e) !== 0 && baseName(e) === nm && (dx * hit.dx + dy * hit.dy) * carWay(e) * way < -0.5);
-    if (twin) pts.push({ x: twin.x, y: twin.y, e: twin.e });
-  }
-  return { pts, e: hit.e, x: hit.x, y: hit.y };
-}
 function renderClosed() {
-  const closed = closedEdges(), n = S.closed.filter((c) => c.e >= 0).length;
-  const shut = S.closed.flatMap((c) => c.pts).filter((q) => q.e >= 0);
-  const t = dijkstra([S.dest]), t2 = dijkstra([S.dest], { closed });
-  const sc = scopeFor(t), w = weights(sc), f = accumulate(t2, w);
+  ensureLive();
+  const closed = closedEdges(), live = liveClosures();
+  const n = S.closed.filter((c) => c.e >= 0).length + live.length;
+  const shut = S.closed.flatMap((c) => c.pts).filter((q) => q.e >= 0).map((q) => q.e).concat(live.flatMap((c) => c.edges));
+  const t = dijkstra([S.dest]), t2 = closedSearch(S.dest, closed);
+  const sc = scopeFor(t), w = weights(sc);
+  // flows over the (junction, state) tree
+  const fv = new Float64Array(t2.varc.length);
+  for (let i = 0; i < G.n; i++) if (w[i] > 0 && isFinite(t2.dist[i])) fv[t2.best[i]] += w[i];
+  for (let k = t2.order.length - 1; k >= 0; k--) { const v = t2.order[k]; if (t2.par[v] >= 0) fv[t2.par[v]] += fv[v]; }
   const top = 5;
   const ramp = (d) => { const k = Math.min(1, Math.max(0, d) / top); return `hsl(${210 - k * 210} 70% ${matchDark() ? 60 : 45}%)`; };
-  drawTree(t2, f, f[S.dest] || 1, (i) => ramp(t2.dist[i] - t.dist[i]));
+  // signed diversions, faint and dotted, under the routes
+  if (liveReady() && G.live.diversions.length) {
+    ctx.save(); ctx.strokeStyle = css("--diversion"); ctx.lineWidth = 2.5; ctx.setLineDash([1.5, 4]); ctx.lineCap = "round"; ctx.globalAlpha = 0.9;
+    ctx.beginPath(); for (const line of G.live.diversions) line.forEach(([x, y], i) => i ? ctx.lineTo(view.px(x), view.py(y)) : ctx.moveTo(view.px(x), view.py(y))); ctx.stroke();
+    ctx.restore();
+  }
+  drawTree({ arc: t2.varc }, fv, fv[t2.start] || 1, (v) => ramp(t2.dist[v % G.n] - t.dist[v % G.n]));
   // junctions the closures cut off from the destination
   let acc = 0, tot = 0, cut = 0, worst = -1;
   ctx.fillStyle = css("--closed");
@@ -674,33 +814,35 @@ function renderClosed() {
     }
     if (w[i] > 0) { acc += w[i] * (t2.dist[i] - t.dist[i]); tot += w[i]; if (worst < 0 || t2.dist[i] - t.dist[i] > t2.dist[worst] - t.dist[worst]) worst = i; }
   }
-  // the closed stretches, dashed, with a no-entry sign
+  // the closed stretches, dashed, with a no-entry sign on each closure
   ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
   for (const pass of [[css("--land"), 7, []], [css("--closed"), 4, [5, 4]]]) {
     ctx.strokeStyle = pass[0]; ctx.lineWidth = pass[1]; ctx.setLineDash(pass[2]);
-    ctx.beginPath(); for (const q of shut) tracePath(ctx, q.e * 2); ctx.stroke();
+    ctx.beginPath(); for (const e of shut) tracePath(ctx, e * 2); ctx.stroke();
   }
   ctx.restore();
   for (const c of S.closed) if (c.e >= 0) noEntry(ctx, c.x, c.y);
+  for (const c of live) noEntry(ctx, c.x, c.y);
   marker(ctx, G.x[S.dest], G.y[S.dest], 6, css("--route-no"), "");
-  current = { t: t2, t1: t, closedView: true };
+  current = { t: t2, t1: t, closedView: true, vt: t2 };
   const towns = G.villages.map((p) => ({ p, node: nodeAt(p) })).filter((r) => r.node !== S.dest && (!sc || sc(r.node)))
-    .map(({ p, node }) => ({ p, d: t2.dist[node] - t.dist[node] })).filter((r) => r.d >= 0.5).sort((a, b) => b.d - a.d).slice(0, 3);
+    .map(({ p, node }) => ({ p, d: t2.dist[node] - t.dist[node] })).filter((r) => isFinite(r.d) && r.d >= 0.5).sort((a, b) => b.d - a.d).slice(0, 3);
   const { med } = median(t, w), { med: med2 } = median(t2, w);
   const cutPct = 100 * cut / ((tot + cut) || 1);
-  title(n ? `With ${n} ${n === 1 ? "road" : "roads"} closed, all roads lead to` : "All roads lead to", S.destName,
+  title(n ? `With ${n} ${n === 1 ? "closure" : "closures"}, all roads lead to` : "All roads lead to", S.destName,
     n ? (fmtT(med2) === fmtT(med) ? `Half the ${unitWord()} ${scopeText()} ${isAre()} still within <b>${fmtT(med2)}</b>.` : `Half the ${unitWord()} ${scopeText()} ${isAre()} within <b>${fmtT(med2)}</b>, against ${fmtT(med)} with every road open.`) + `<br>Average extra: <b>${fmtT(acc / (tot || 1), true)}</b>` +
       (worst >= 0 && t2.dist[worst] - t.dist[worst] >= 0.5 ? `; worst: ${esc(placeName(G.x[worst], G.y[worst]))}, <b>+${fmtT(t2.dist[worst] - t.dist[worst], true)}</b>.` : ".") +
       (towns.length ? `<br>Hardest hit: ` + towns.map((r) => `${esc(r.p.name)} +${fmtT(r.d, true)}`).join(" · ") : "") +
       (cut > 0 ? `<br><b>${cutPct < 0.1 ? "Under 0.1" : cutPct.toFixed(1)}%</b> of the ${unitWord()} is cut off: no way through by car.` : "")
-      : `Every road is open. Click a road on the map to close it and see the detours.`);
+      : S.live && !liveReady() ? `Loading today's roadworks closures…` : `Every road is open. Click a road on the map to close it and see the detours.`);
   syncClosed();
   const steps = [0, 1, 2, 3, 5];
   $("#legend").innerHTML = `<div class="label">Time the closures add</div>` +
     steps.map((m, k) => `<div class="row"><span class="sw" style="background:${ramp(m)}"></span>${m} min${k === steps.length - 1 ? " or more" : ""}</div>`).join("") +
     `<div class="row"><span class="sw" style="background:repeating-linear-gradient(90deg,var(--closed) 0 5px,transparent 5px 9px)"></span>Closed road</div>` +
+    (liveReady() && G.live.diversions.length ? `<div class="row"><span class="sw" style="background:repeating-linear-gradient(90deg,var(--diversion) 0 2px,transparent 2px 6px)"></span>Signed diversion</div>` : "") +
     `<div class="row"><span class="dot" style="width:6px;height:6px;background:var(--closed)"></span>Cut off</div>` +
-    `<div class="row" style="margin-top:6px;color:var(--muted)">Lines show the quickest routes by car around the closures.</div>`;
+    `<div class="row" style="margin-top:6px;color:var(--muted)">Lines show the quickest routes by car around the closures. Closures stop through traffic; anyone on a closed stretch can still drive out. No traffic is modelled, so a closure shows its detour, not its queues.</div>`;
 }
 function noEntry(c, x, y) {
   const X = view.px(x), Y = view.py(y);
@@ -710,8 +852,25 @@ function noEntry(c, x, y) {
 }
 const closedName = (c) => (c.e >= 0 && G.en[c.e] ? G.names[G.en[c.e]] : "") || placeName(c.x, c.y).replace(/^near /, "Lane near ");
 function syncClosed() {
-  $("#closedlist").innerHTML = S.closed.map((c, i) => `<span class="tag"><span class="no-entry"></span>${esc(closedName(c))}<button type="button" data-i="${i}" aria-label="Reopen ${esc(closedName(c))}">×</button></span>`).join("");
-  $("#reopen").hidden = !S.closed.length;
+  $("#live").checked = S.live; $("#liveday").value = S.liveDay;
+  const st = $("#livestatus");
+  if (!S.live) st.textContent = "";
+  else if (!liveReady()) st.textContent = "Loading the roadworks map…";
+  else if (G.live.error) st.textContent = `Couldn't load the roadworks map (${G.live.error}). You can still close roads by clicking them.`;
+  else {
+    const k = G.live.closures.length;
+    st.innerHTML = `${k ? k + (k === 1 ? " closure" : " closures") : "No closures"} on ${esc(new Date(S.liveDay + "T12:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" }))}, from the <a href="https://roadworks.gov.je/JSW/roadworks.htm" target="_blank" rel="noopener">Government of Jersey roadworks map</a>` +
+      (G.live.offroad ? `; ${G.live.offroad} on paths cars don't use left out` : "") + (S.liveOff.size ? `; ${S.liveOff.size} reopened by you` : "") + ".";
+  }
+  const byRoad = new Map();
+  for (const c of liveClosures()) { const k = c.road + "|" + c.timing; if (!byRoad.has(k)) byRoad.set(k, []); byRoad.get(k).push(c); }
+  const when = (t) => t === "All Day" ? "" : ` <span style="color:var(--muted)">(${esc(t.replace("Btwn AM - PM Peak", "daytime").replace("After PM Peak", "evening").replace("Before AM Peak", "early"))})</span>`;
+  const live = [...byRoad.values()].map((cs) => { const c = cs[0];
+    const tip = cs.map((c) => `${c.parish ? c.parish + " · " : ""}${fmtJap(c.from)} to ${fmtJap(c.to)} · ${c.timing}${c.work ? " · " + c.work : ""}${c.promoter ? " (" + c.promoter + ")" : ""}`).join("\n");
+    return `<span class="tag live" title="${esc(tip)}"><span class="no-entry"></span>${esc(c.road)}${cs.length > 1 ? ` <span style="color:var(--muted)">×${cs.length}</span>` : ""}${when(c.timing)}<button type="button" data-k="${esc(cs.map((c) => c.key).join("\u0001"))}" aria-label="Reopen ${esc(c.road)}">×</button></span>`; });
+  const mine = S.closed.map((c, i) => `<span class="tag"><span class="no-entry"></span>${esc(closedName(c))}<button type="button" data-i="${i}" aria-label="Reopen ${esc(closedName(c))}">×</button></span>`);
+  $("#closedlist").innerHTML = mine.concat(live).join("");
+  $("#reopen").hidden = !(S.closed.length || liveClosures().length);
 }
 function seedList() {
   if (S.seeds === "churches") return G.churches.map((c) => ({ name: G.parishes[c.parish], x: c.x, y: c.y, node: nodeAt(c), parish: c.parish }));
@@ -827,7 +986,8 @@ function onMove(ev) {
   hx.lineCap = "round"; hx.lineJoin = "round";
   const trace = (col, w) => {
     hx.strokeStyle = col; hx.lineWidth = w; hx.beginPath();
-    for (let k = i; t.arc[k] >= 0; k = G.to(t.arc[k])) tracePath(hx, t.arc[k]);
+    if (current.vt) for (let v = current.vt.best[i]; current.vt.varc[v] >= 0; v = current.vt.par[v]) tracePath(hx, current.vt.varc[v]);
+    else for (let k = i; t.arc[k] >= 0; k = G.to(t.arc[k])) tracePath(hx, t.arc[k]);
     hx.stroke();
   };
   if (current.meet) {
@@ -862,7 +1022,8 @@ function onClick(ev) {
   if (S.kind === "closed") {
     const hit = closureAt(x, y, 14 / view.s); if (!hit) return;
     const k = S.closed.findIndex((c) => c.pts.some((q) => hit.pts.some((h) => h.e === q.e)));
-    if (k >= 0) S.closed.splice(k, 1); else if (S.closed.length < 40) S.closed.push(hit);
+    const lc = liveClosures().find((c) => hit.pts.some((h) => c.edges.includes(h.e)));
+    if (k >= 0) S.closed.splice(k, 1); else if (lc) S.liveOff.add(lc.key); else if (S.closed.length < 40) S.closed.push(hit);
     setHash(); render(); return;
   }
   const i = nearestNode(G, x, y, 1.5); if (i < 0) return;
@@ -892,7 +1053,8 @@ function setDest(x, y, name, hash = true) {
 function setHash() {
   const d = slug(S.destName.replace(/^near /, ""));
   const h = S.kind === "sheds" ? (S.seeds === "villages" ? "villages" : "watersheds") : S.kind === "meet" ? "meet-up" : S.kind === "slow" ? "20-mph-" + d
-    : S.kind === "closed" ? "closures-" + d + (S.closed.length ? "/c=" + S.closed.map((c) => c.pts.map((q) => Math.round(q.x * 1000).toString(36) + "." + Math.round(q.y * 1000).toString(36)).join("~")).join("_") : "") : d;
+    : S.kind === "closed" ? "closures-" + d + (!S.live ? "/d=none" : S.liveDay !== todayISO() ? "/d=" + S.liveDay.replace(/-/g, "") : "")
+      + (S.closed.length ? "/c=" + S.closed.map((c) => c.pts.map((q) => Math.round(q.x * 1000).toString(36) + "." + Math.round(q.y * 1000).toString(36)).join("~")).join("_") : "") : d;
   try { history.replaceState(null, "", "#" + h + (T() === "car" ? "" : "/" + T())); } catch (e) {}
 }
 function syncChips() {
@@ -957,8 +1119,14 @@ function initControls() {
   $("#near").addEventListener("input", (e) => { S.near = +e.target.value; syncChips(); render(); });
   $("#tpresets").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; loadPreset(b.dataset.v); render(); });
   $("#travellers").addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (!b) return; S.travellers.splice(+b.dataset.i, 1); syncTravellers(); render(); });
-  $("#closedlist").addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (!b) return; S.closed.splice(+b.dataset.i, 1); setHash(); render(); });
-  $("#reopen").addEventListener("click", () => { S.closed = []; setHash(); render(); });
+  $("#closedlist").addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.k) for (const k of b.dataset.k.split("\u0001")) S.liveOff.add(k); else S.closed.splice(+b.dataset.i, 1);
+    setHash(); render();
+  });
+  $("#reopen").addEventListener("click", () => { S.closed = []; if (liveReady()) for (const c of G.live.closures) S.liveOff.add(c.key); setHash(); render(); });
+  $("#live").addEventListener("change", (e) => { S.live = e.target.checked; S.liveOff = new Set(); setHash(); render(); });
+  $("#liveday").addEventListener("change", (e) => { if (!e.target.value) return; S.liveDay = e.target.value; S.liveOff = new Set(); setHash(); render(); });
   cv.addEventListener("pointermove", onMove);
   cv.addEventListener("pointerleave", () => { $("#tip").hidden = true; hx.clearRect(0, 0, view.W, view.H); });
   cv.addEventListener("click", onClick);
@@ -984,8 +1152,11 @@ function fromHash() {
   if (h.startsWith("20-mph")) { S.kind = "slow"; h = h.slice(7); if (!h) return; }
   if (h.startsWith("closures")) {
     S.kind = "closed";
-    const [head, list] = h.split("/c=");
-    S.closed = (list || "").split("_").filter(Boolean).map((c) => ({ e: -1, pts: c.split("~").map((p) => { const [x, y] = p.split(".").map((v) => parseInt(v, 36) / 1000); return { x, y, e: -1 }; })
+    const [head, ...parts] = h.split("/");
+    const part = (k) => (parts.find((p) => p.startsWith(k + "=")) || "").slice(k.length + 1);
+    const day = part("d");
+    S.live = day !== "none"; S.liveDay = /^\d{8}$/.test(day) ? `${day.slice(0, 4)}-${day.slice(4, 6)}-${day.slice(6, 8)}` : todayISO(); S.liveOff = new Set();
+    S.closed = part("c").split("_").filter(Boolean).map((c) => ({ e: -1, pts: c.split("~").map((p) => { const [x, y] = p.split(".").map((v) => parseInt(v, 36) / 1000); return { x, y, e: -1 }; })
       .filter((q) => isFinite(q.x) && isFinite(q.y)) })).filter((c) => c.pts.length);
     h = head.slice(9); if (!h) return;
   }
@@ -995,6 +1166,7 @@ function fromHash() {
 (async () => {
   try { G = await load(); } catch (e) { $("#loading").textContent = "The road data didn't load. Reload the page to try again."; return; }
   $("#loading").hidden = true;
+  S.liveDay = todayISO();
   const home = findName("St Helier"); setDest(home.x, home.y, home.name, false);
   fromHash();
   initControls(); syncChips(); layout(); render();

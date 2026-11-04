@@ -12,11 +12,11 @@ Every map but the 20 mph island can travel **by car, by bike or on foot**.
 
 - **One destination**: pick a place, a road, a beach or a landmark (or click the map). Line width shows the land area, or the people, whose quickest route uses each road. Start routes from the whole island, the same parish, or nearby.
 - **Watersheds**: places compete for the island and every junction drains to the one it reaches fastest. With the twelve parish churches, the real parish boundaries are drawn on top, and the page says how much of the island is closer by road to its own parish church than to any other.
-- **Meet up**: the fairest place for a group to meet (nobody travels too long, or least total travel). Presets: the four corners (Grosnez, Corbière, La Rocque, Rozel) and the twelve parishes.
+- **Meet up**: the fairest place for a group to meet (nobody travels too long, or least total travel). Presets: the four corners (Grosnez, Corbière, La Rocque, Rozel), the twelve parishes, and **Everyone in Jersey**: every junction scored as a meeting place for the whole island, by its longest or its average journey from everywhere, counting land or people, and shaded green to red. By car, the fairest place for everyone is Victoria Avenue at First Tower (nobody more than 20 minutes away); the least total travel for all 103,267 people is on the Esplanade (7.6 minutes on average).
 - **Road closures**: the day's roadworks closures, live from the Government of Jersey's [roadworks map](https://roadworks.gov.je/JSW/roadworks.htm) (today, or any other day; untick to see every road open). The map shows the detours by car, colours each route by the minutes the closures add, draws the signed diversions, and marks junctions cut off. Closures stop through traffic, but a journey may start along a closed stretch, as someone living there would. The day goes into the link: `#closures-st-helier/d=20261225`, or `/d=none` for roadworks off. (Closing roads yourself to test a what-if may come later; the engine already takes any set of closed stretches.)
 - **20 mph island**: the same map with every speed limit above 20 mph cut to 20, coloured by the minutes today's limits save. (The UK edition closes the motorways instead. Closing Jersey's A roads splits the road network into hundreds of pieces, because the lanes mostly hang off the A roads rather than joining each other, so that map would mostly show cut-off pockets.)
 
-Links work by hash: `#gorey`, `#jersey-airport`, `#la-route-de-st-aubin`, `#watersheds`, `#villages`, `#meet-up`, `#20-mph-st-helier`, `#closures-st-helier`. Add `/bike` or `/foot` to travel that way: `#gorey/bike`, `#watersheds/foot`, `#corbiere-railway-walk/foot`.
+Links work by hash: `#gorey`, `#jersey-airport`, `#la-route-de-st-aubin`, `#watersheds`, `#villages`, `#meet-up`, `#everyone`, `#20-mph-st-helier`, `#closures-st-helier`. Add `/bike` or `/foot` to travel that way: `#gorey/bike`, `#watersheds/foot`, `#corbiere-railway-walk/foot`.
 
 ## The model
 
@@ -38,6 +38,7 @@ Needs `curl`, `osmium-tool` and Python 3 (standard library only).
 ```bash
 sh build/fetch_data.sh        # downloads the Jersey extract and terrain tiles, and cuts them into data/raw
 python3 build/build_graph.py  # writes graph.json
+python3 build/build_central.py  # writes central.json: every junction as a meeting place for everyone (a few minutes, on every core)
 ```
 
 The extract comes from [OpenStreetMap France](https://download.openstreetmap.fr/extracts/europe/), updated daily. Delete `data/raw/jersey-latest.osm.pbf` before running `fetch_data.sh` to fetch a newer one.
@@ -49,7 +50,7 @@ Serve the folder (`python3 -m http.server`) and open `index.html`. The pages in 
 The site at www.lecuirot.je serves the page from a `roads/` folder, the same way it serves `/jersey-flights/`. Copy the built files across:
 
 ```bash
-sh build/publish.sh ../lecuirot.je   # copies index.html, graph.json and og.png into ../lecuirot.je/roads/
+sh build/publish.sh ../lecuirot.je   # copies index.html, graph.json, central.json and og.png into ../lecuirot.je/roads/
 ```
 
 then commit and push that repository. The page reads `graph.json` from beside itself, so it also works at the root of any static host.

@@ -222,9 +222,10 @@ input[type="search"] {
       <div class="chips" role="group" aria-labelledby="l-trav" id="tpresets">
         <button type="button" data-v="corners">Four corners</button>
         <button type="button" data-v="churches">Twelve parishes</button>
+        <button type="button" data-v="everyone">Everyone in Jersey</button>
         <button type="button" data-v="clear">Clear</button>
       </div>
-      <p class="hint" data-touch="Tap the map to add a traveller or remove one, or start from a preset.">Click the map to add or remove a traveller, or start from a preset.</p>
+      <p class="hint" data-touch="Tap the map to add a traveller or remove one, or start from a preset. Everyone in Jersey scores every junction as a meeting place for the whole island.">Click the map to add or remove a traveller, or start from a preset. Everyone in Jersey scores every junction as a meeting place for the whole island.</p>
       <span class="label" id="l-fair">Best spot means</span>
       <div class="chips ink" role="group" aria-labelledby="l-fair" id="fair">
         <button type="button" data-v="max" aria-pressed="true">Nobody travels too long</button>
@@ -250,7 +251,7 @@ input[type="search"] {
       <div class="range" id="near-wrap" hidden><input type="range" id="near" min="2" max="20" step="1" value="8" aria-label="How far away"><output id="near-out">8 min</output></div>
     </div>
 
-    <div class="group" data-for="one sheds slow closed">
+    <div class="group" data-for="one sheds slow closed" id="weightgroup">
       <span class="label" id="l-weight">Line width shows</span>
       <div class="chips ink" role="group" aria-labelledby="l-weight" id="weight">
         <button type="button" data-v="area" aria-pressed="true">Land area</button>
@@ -275,7 +276,7 @@ input[type="search"] {
   </main>
   <footer class="footnote" id="footnote">
       <span id="timing"></span><br>
-      Roads and paths: OpenStreetMap (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL), each used only by those allowed on it; driveways, car parks and private roads are left out. By car: every road a car can use, A roads up to 34 mph, B roads 27, C roads 25, other lanes 23, estate roads 18, green lanes 12, each capped at 85% of the posted limit, plus 3 seconds for every junction passed; one-way streets respected; no traffic, lights or queues for the tunnel. The 20 mph island cuts every higher limit to 20 mph, at the same 85%. Road closures shut a stretch of road between two junctions, both ways, to through traffic; a journey may still start along a closed stretch, as someone living there would. The roadworks closures load in your browser from the Government of Jersey's roadworks map (<a href="https://roadworks.gov.je/JSW/roadworks.htm" target="_blank" rel="noopener">roadworks.gov.je</a>): works marked Road Closure that are approved or in progress on the chosen day, whatever their hours, matched to the roads they lie on; signed diversions are drawn for reference. Check the official map before you travel. By bike: 16 km/h on the flat (11 on rough tracks), slower uphill and up to 30 km/h down, plus 2 seconds a junction; bikes are pushed along footways and pedestrian streets and kept off steps; one-way streets respected unless bikes are let through. On foot: Tobler's hiking pace, 5 km/h on the flat, on every road, path and set of steps. Heights: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Mapzen terrain tiles</a> (EU-DEM, produced using Copernicus data and information funded by the European Union, and SRTM). People: each parish's 2021 census population (Statistics Jersey) spread over its homes by floor area, from OpenStreetMap buildings. Land: 50 m squares, each given to its nearest junction.
+      Roads and paths: OpenStreetMap (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL), each used only by those allowed on it; driveways, car parks and private roads are left out. By car: every road a car can use, A roads up to 34 mph, B roads 27, C roads 25, other lanes 23, estate roads 18, green lanes 12, each capped at 85% of the posted limit, plus 3 seconds for every junction passed; one-way streets respected; no traffic, lights or queues for the tunnel. The 20 mph island cuts every higher limit to 20 mph, at the same 85%. Road closures shut a stretch of road between two junctions, both ways, to through traffic; a journey may still start along a closed stretch, as someone living there would. The roadworks closures load in your browser from the Government of Jersey's roadworks map (<a href="https://roadworks.gov.je/JSW/roadworks.htm" target="_blank" rel="noopener">roadworks.gov.je</a>): works marked Road Closure that are approved or in progress on the chosen day, whatever their hours, matched to the roads they lie on; signed diversions are drawn for reference. Check the official map before you travel. By bike: 16 km/h on the flat (11 on rough tracks), slower uphill and up to 30 km/h down, plus 2 seconds a junction; bikes are pushed along footways and pedestrian streets and kept off steps; one-way streets respected unless bikes are let through. On foot: Tobler's hiking pace, 5 km/h on the flat, on every road, path and set of steps. Heights: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Mapzen terrain tiles</a> (EU-DEM, produced using Copernicus data and information funded by the European Union, and SRTM). Everyone in Jersey: every junction scored as a meeting place by the journeys to it from every other junction, worked out in advance, counting land or people. People: each parish's 2021 census population (Statistics Jersey) spread over its homes by floor area, from OpenStreetMap buildings. Land: 50 m squares, each given to its nearest junction.
       Adapted from Doug Belshaw's <a href="https://roads.dougbelshaw.com" target="_blank" rel="noopener">All Roads Lead To (UK)</a>, after Ethan Mollick's <a href="https://all-roads-lead-to.netlify.app/" target="_blank" rel="noopener">US version</a> and “All Roads Lead to Richmond” by <a href="https://arterialmapping.wordpress.com/2022/03/20/all-roads-lead-to-richmond-2/" target="_blank" rel="noopener">Arterial Mapping</a>. <a href="https://github.com/JamesLeCuirot/all-roads-jersey" target="_blank" rel="noopener">Source code</a> (GPL-3.0).
   </footer>
 </div>
@@ -288,7 +289,7 @@ const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v
 const BASE = /\/$|\.html?$/.test(location.pathname) ? "" : location.pathname.replace(/^.*\//, "") + "/";
 
 const S = { kind: "one", dest: null, destXY: null, destName: "", mode: "time", travel: "car", scope: "all", near: 8, weight: "area",
-  seeds: "churches", nbig: 8, picks: [], travellers: [], fair: "max", live: true, liveDay: "" };
+  seeds: "churches", nbig: 8, picks: [], travellers: [], fair: "max", live: true, liveDay: "", everyone: false };
 let G = null; // graph
 const CAR_ONLY = new Set(["slow", "closed"]); // maps that compare car times only
 const M = () => CAR_ONLY.has(S.kind) ? "time" : S.mode;
@@ -923,7 +924,64 @@ function renderSheds() {
     rank.slice(0, 20).map((r) => `<div class="row basin"><span class="dot" style="background:${bc(r.i)}"></span>${esc(r.s.name)} · ${Math.round(100 * r.v / tot)}%</div>`).join("") + `</div>` +
     (churches ? `<div class="row" style="margin-top:6px;color:var(--muted)">Dark lines: the real parish boundaries.</div>` : "");
 }
+// central.json: for every junction, the longest and the average journey to it from everywhere (build/build_central.py)
+let centralLoading = false;
+function ensureCentral() {
+  if (G.central || centralLoading) return;
+  centralLoading = true;
+  fetch(BASE + "central.json").then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }).then((d) => {
+    const c = {};
+    for (const [key, cols] of Object.entries(d.scores)) { c[key] = {}; for (const [k, v] of Object.entries(cols)) c[key][k] = dec(v, Uint16Array); }
+    G.central = { scores: c, unit: { time: d.time_unit, dist: d.dist_unit } };
+  }).catch((e) => { G.central = { error: String(e.message || e) }; }).finally(() => { centralLoading = false; if (S.kind === "meet" && S.everyone) render(); });
+}
+function renderEveryone() {
+  const L = $("#legend");
+  if (!G.central || G.central.error) {
+    ensureCentral(); current = null; L.innerHTML = "";
+    title(lead("If everyone in Jersey met up"), G.central ? "it didn't load" : "…", G.central ? "The scores didn't load. Reload the page to try again." : "Loading every junction's journeys…");
+    return;
+  }
+  const sc = G.central.scores[T() + "|" + M()], unit = G.central.unit[M()], by = S.weight === "pop" ? "Pop" : "Land";
+  const score = sc[(S.fair === "max" ? "max" : "mean") + by], longest = sc["max" + by], average = sc["mean" + by];
+  const bit = 1 << TRAVEL[T()];
+  let best = -1;
+  for (let i = 0; i < G.n; i++) {
+    if (!(G.mask[i] & bit) || score[i] === 65535) continue;
+    if (best < 0 || score[i] < score[best] || (score[i] === score[best] && average[i] + longest[i] < average[best] + longest[best])) best = i;
+  }
+  // everyone's quickest routes to the fairest one, in one quiet colour underneath
+  const t = dijkstra([best]), f = accumulate(t, weights(null));
+  ctx.globalAlpha = 0.45; drawTree(t, f, f[best] || 1, () => css("--muted")); ctx.globalAlpha = 1;
+  // every junction shaded by how fair a meeting place it would be, on top
+  const vals = []; for (let i = 0; i < G.n; i++) if ((G.mask[i] & bit) && score[i] !== 65535) vals.push(score[i]);
+  vals.sort((a, b) => a - b);
+  const lo = vals[0], hi = vals[Math.floor(vals.length * 0.9)];
+  const r = Math.max(1.6, view.W / 420);
+  ctx.globalAlpha = 0.85;
+  for (const i of Array.from({ length: G.n }, (_, i) => i).filter((i) => (G.mask[i] & bit) && score[i] !== 65535).sort((a, b) => score[b] - score[a])) {
+    const k = Math.min(1, (score[i] - lo) / ((hi - lo) || 1));
+    ctx.fillStyle = `hsl(${140 - 140 * k} 60% ${matchDark() ? 50 : 45}%)`;
+    ctx.beginPath(); ctx.arc(view.px(G.x[i]), view.py(G.y[i]), r, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  marker(ctx, G.x[best], G.y[best], 9, css("--route-no"), "");
+  current = { t, everyone: { longest, average, unit } };
+  const v = (a) => a[best] * unit, who = S.weight === "pop" ? "person" : "spot";
+  const where = placeName(G.x[best], G.y[best]), road = roadAt(best);
+  title(lead(S.fair === "max" ? "If everyone in Jersey met up, the fairest place is" : "If everyone in Jersey met up, least total travel: meet"), where,
+    (road ? `On ${esc(road)}, ${esc(parishOf(best))}.<br>` : "") +
+    (S.fair === "max"
+      ? `Nobody ${S.weight === "pop" ? "who lives in Jersey" : "anywhere in Jersey"} is more than <b>${fmtC(v(longest))}</b> away; the average ${who} is ${fmtC(v(average), true)} away.`
+      : `The average ${who} is <b>${fmtC(v(average), true)}</b> away; the farthest is ${fmtC(v(longest))}.`) +
+    `<br>Counting ${S.weight === "pop" ? "the 103,267 people of the 2021 census, where they live" : "every 50 m square of land"}.`);
+  L.innerHTML = `<div class="label">Every junction as a meeting place, by ${S.fair === "max" ? "longest journey" : "average journey"}</div>` +
+    `<div class="row"><span class="sw" style="background:hsl(140 55% 50%)"></span>Fairest</div><div class="row"><span class="sw" style="background:hsl(0 55% 50%)"></span>Least fair</div>` +
+    `<div class="row"><span class="sw" style="background:var(--muted)"></span>Everyone's quickest routes there</div>` +
+    `<div class="row" style="margin-top:6px;color:var(--muted)">Each dot is a junction, shaded by the ${S.fair === "max" ? "longest" : "average"} journey if everyone met there. Lines are thicker where more of the ${S.weight === "pop" ? "people" : "land"} goes.</div>`;
+}
 function renderMeet() {
+  if (S.everyone) return renderEveryone();
   const tr = S.travellers;
   const L = $("#legend");
   if (tr.length < 2) {
@@ -1011,7 +1069,8 @@ function showInfo(clientX, clientY, touch) {
     html = head + S.travellers.map((p, k) => `${esc(p.name)}: <span class="t">${fmtC(current.meet[k].dist[i])}</span>`).join("<br>");
   } else {
     trace(css("--land"), 6); trace(css("--route-no"), 3);
-    if (current.slow) html = head + `Today <span class="t">${fmtT(current.t1.dist[i])}</span><br>At ${G.slow} mph <span class="t">${fmtT(t.dist[i])}</span>`;
+    if (current.everyone) { const e = current.everyone; html = head + `<span class="t">${fmtC(t.dist[i])}</span> to the meeting place<br><span class="m">Meeting here instead: farthest ${fmtC(e.longest[i] * e.unit)}, average ${fmtC(e.average[i] * e.unit, true)}</span>`; }
+    else if (current.slow) html = head + `Today <span class="t">${fmtT(current.t1.dist[i])}</span><br>At ${G.slow} mph <span class="t">${fmtT(t.dist[i])}</span>`;
     else if (current.closedView) html = head + (isFinite(t.dist[i]) ? `With the closures <span class="t">${fmtT(t.dist[i])}</span><br>Every road open <span class="t">${fmtT(current.t1.dist[i])}</span>` : `<span class="t">Cut off</span> by the closures`);
     else if (current.seeds) {
       const s = current.seeds[t.lab[i]];
@@ -1020,7 +1079,7 @@ function showInfo(clientX, clientY, touch) {
     } else html = head + `<span class="t">${fmtC(t.dist[i])}</span> to ${esc(S.destName)}`;
   }
   hx.beginPath(); hx.arc(view.px(G.x[i]), view.py(G.y[i]), 4, 0, 7); hx.fillStyle = css("--ink"); hx.fill();
-  if (touch) {
+  if (touch && S.kind !== "meet") {
     const picked = S.kind === "sheds" && S.seeds === "picks" && S.picks.some((p) => Math.hypot(p.x - G.x[i], p.y - G.y[i]) < 0.4);
     const label = S.kind === "sheds" ? (picked ? "Remove this place" : "Add as a place") : "Go here";
     html += `<button type="button" class="tip-go">${label}</button>`;
@@ -1042,7 +1101,8 @@ function nameFor(i) {
 // a click acts at once; a tap shows the info box first (but adds a traveller at once in Meet up)
 let lastPointer = "mouse";
 function onClick(ev) {
-  if (lastPointer === "touch" && S.kind !== "meet") { tapped = showInfo(ev.clientX, ev.clientY, true); return; }
+  if (lastPointer === "touch" && (S.kind !== "meet" || S.everyone)) { tapped = showInfo(ev.clientX, ev.clientY, true); return; }
+  if (S.kind === "meet" && S.everyone) return; // the whole island is already meeting
   const r = cv.getBoundingClientRect();
   const x = view.ix(ev.clientX - r.left), y = view.iy(ev.clientY - r.top);
   const i = nearestNode(G, x, y, 1.5); if (i < 0) return;
@@ -1056,6 +1116,7 @@ function actAt(i, x, y) {
     if (k >= 0) S.picks.splice(k, 1); else if (S.picks.length < 24) S.picks.push({ name: nm, x: G.x[i], y: G.y[i], node: i });
   } else if (S.kind === "meet") {
     const k = S.travellers.findIndex((p) => Math.hypot(p.x - x, p.y - y) < 0.4);
+    S.everyone = false;
     if (k >= 0) S.travellers.splice(k, 1); else if (S.travellers.length < 12) S.travellers.push({ name: nm, x: G.x[i], y: G.y[i], node: i });
     syncTravellers();
   } else {
@@ -1074,7 +1135,7 @@ function setDest(x, y, name, hash = true) {
 }
 function setHash() {
   const d = slug(S.destName.replace(/^near /, ""));
-  const h = S.kind === "sheds" ? (S.seeds === "villages" ? "villages" : "watersheds") : S.kind === "meet" ? "meet-up" : S.kind === "slow" ? "20-mph-" + d
+  const h = S.kind === "sheds" ? (S.seeds === "villages" ? "villages" : "watersheds") : S.kind === "meet" ? (S.everyone ? "everyone" : "meet-up") : S.kind === "slow" ? "20-mph-" + d
     : S.kind === "closed" ? "closures-" + d + (!S.live ? "/d=none" : S.liveDay !== todayISO() ? "/d=" + S.liveDay.replace(/-/g, "") : "") : d;
   try { history.replaceState(null, "", "#" + h + (T() === "car" ? "" : "/" + T())); } catch (e) {}
 }
@@ -1083,12 +1144,17 @@ function syncChips() {
     for (const b of document.querySelectorAll(`#${id} button`)) b.setAttribute("aria-pressed", String(b.dataset.v === S[key]));
   for (const b of document.querySelectorAll("#quick button")) b.setAttribute("aria-pressed", String(b.dataset.v === S.destName));
   for (const grp of document.querySelectorAll("[data-for]")) grp.hidden = !grp.dataset.for.split(" ").includes(S.kind);
+  // land or people also counts for the everyone meet-up
+  $("#weightgroup").hidden = !($("#weightgroup").dataset.for.split(" ").includes(S.kind) || (S.kind === "meet" && S.everyone));
+  $("#l-weight").textContent = S.kind === "meet" ? "Count everyone by" : "Line width shows";
+  for (const b of document.querySelectorAll("#tpresets button")) b.setAttribute("aria-pressed", String(b.dataset.v === "everyone" && S.everyone));
   $("#near-wrap").hidden = S.scope !== "near";
   $("#nbig-wrap").hidden = S.seeds !== "villages";
   $("#near-out").textContent = nearText();
   $("#near").setAttribute("aria-valuetext", nearText());
 }
 function syncTravellers() {
+  if (S.everyone) { $("#travellers").innerHTML = `<span class="tag" style="padding-right:8px">Everyone in Jersey</span>`; return; }
   $("#travellers").innerHTML = S.travellers.map((p, i) => `<span class="tag"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:${pal(i)}"></span>${esc(p.name)}<button type="button" data-i="${i}" aria-label="Remove ${esc(p.name)}">×</button></span>`).join("");
 }
 function bindChips(id, key, after) {
@@ -1107,7 +1173,7 @@ function ll(lon, lat) { const p = G.proj; return [(lon - p.lon0) * p.kx, (lat - 
 const findName = (n) => G.search.find((s) => s.name === n);
 function initControls() {
   bindChips("kind", "kind", () => {
-    if (S.kind === "meet" && !S.travellers.length) loadPreset("corners");
+    if (S.kind === "meet" && !S.travellers.length && !S.everyone) loadPreset("corners");
     setHash();
   });
   bindChips("travel", "travel", setHash); bindChips("mode", "mode"); bindChips("scope", "scope"); bindChips("weight", "weight"); bindChips("seeds", "seeds", setHash); bindChips("fair", "fair");
@@ -1138,7 +1204,7 @@ function initControls() {
   $("#nbig").max = G.villages.length;
   $("#nbig").addEventListener("input", (e) => { S.nbig = +e.target.value; $("#nbig-out").textContent = S.nbig; render(); });
   $("#near").addEventListener("input", (e) => { S.near = +e.target.value; syncChips(); render(); });
-  $("#tpresets").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; loadPreset(b.dataset.v); render(); });
+  $("#tpresets").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; loadPreset(b.dataset.v); syncChips(); setHash(); render(); });
   $("#travellers").addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (!b) return; S.travellers.splice(+b.dataset.i, 1); syncTravellers(); render(); });
   $("#live").addEventListener("change", (e) => { S.live = e.target.checked; setHash(); render(); });
   $("#liveday").addEventListener("change", (e) => { if (!e.target.value) return; S.liveDay = e.target.value; setHash(); render(); });
@@ -1160,7 +1226,8 @@ function initControls() {
   new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 }
 function loadPreset(k) {
-  if (k === "clear") S.travellers = [];
+  S.everyone = k === "everyone";
+  if (k === "clear" || k === "everyone") S.travellers = [];
   else if (k === "churches") S.travellers = G.churches.map((c) => ({ name: G.parishes[c.parish], x: c.x, y: c.y }));
   else S.travellers = PRESETS[k].map(([name, lon, lat]) => { const [x, y] = ll(lon, lat); return { name, x, y }; });
   for (const p of S.travellers) p.node = nodeAt(p);
@@ -1174,6 +1241,7 @@ function fromHash() {
   if (h === "watersheds") { S.kind = "sheds"; S.seeds = "churches"; return; }
   if (h === "villages") { S.kind = "sheds"; S.seeds = "villages"; return; }
   if (h === "meet-up") { S.kind = "meet"; loadPreset("corners"); return; }
+  if (h === "everyone") { S.kind = "meet"; loadPreset("everyone"); return; }
   if (h.startsWith("20-mph")) { S.kind = "slow"; h = h.slice(7); if (!h) return; }
   if (h.startsWith("closures")) {
     S.kind = "closed";

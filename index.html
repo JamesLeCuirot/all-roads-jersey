@@ -65,8 +65,14 @@ body {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 16px; box-sizing: border-box;
 }
-.app { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; max-width: 1600px; margin: 0 auto; }
-@media (max-width: 860px) { .app { grid-template-columns: minmax(0, 1fr); } .rail { order: 2; } }
+.app { display: grid; grid-template-columns: 300px minmax(0, 1fr); column-gap: 20px; align-items: start; max-width: 1600px; margin: 0 auto; }
+.rail { grid-row: 1 / span 2; }
+.stage, .footnote { grid-column: 2; }
+/* phones: the map, then the controls, then the notes */
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
+  .rail { order: 2; grid-row: auto; } .stage, .footnote { grid-column: auto; } .footnote { order: 3; margin-top: 0; }
+}
 .rail { display: flex; flex-direction: column; gap: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 18px; min-width: 0; position: sticky; top: max(16px, env(safe-area-inset-top, 0px)); max-height: calc(100vh - 32px); overflow: auto; box-sizing: border-box; }
 @media (max-width: 860px) { .rail { position: static; max-height: none; } }
 .brand h1 { font-family: var(--font-display); font-weight: 800; font-size: 24px; letter-spacing: -0.01em; margin: 0 0 6px; line-height: 1.05; }
@@ -116,6 +122,8 @@ input[type="search"] {
   position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 3px;
   padding: 7px 9px; font-size: 13px; line-height: 1.4; box-shadow: 0 2px 10px rgb(0 0 0 / 0.12); max-width: 260px; z-index: 3;
 }
+.tip.touch { pointer-events: auto; }
+.tip-go { display: block; margin-top: 8px; width: 100%; min-height: 38px; font: inherit; font-weight: 700; font-size: 14px; border: 0; border-radius: 3px; background: var(--ink); color: var(--panel); cursor: pointer; }
 .tip b { font-weight: 700; }
 .tip .t { font-family: var(--font-data); font-weight: 600; }
 .tip .m { color: var(--muted); }
@@ -125,7 +133,8 @@ input[type="search"] {
 .check { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13.5px; }
 .check input[type="checkbox"] { accent-color: var(--closed); width: 15px; height: 15px; margin: 0; }
 .check input[type="date"] { font: inherit; font-size: 13px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 3px; background: var(--land); color: var(--ink); }
-.tag.live { border-style: dashed; padding-right: 8px; }
+.tag.live { border-style: dashed; padding-right: 8px; font: inherit; font-size: 12.5px; background: transparent; color: var(--ink); cursor: pointer; text-align: left; }
+.tag.live[aria-pressed="true"] { border-color: var(--closed); }
 .tag .no-entry { width: 10px; height: 10px; border-radius: 50%; background: var(--closed); flex: none; position: relative; }
 .tag .no-entry::after { content: ""; position: absolute; left: 2px; right: 2px; top: 4px; height: 2px; background: #fff; }
 .matches { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
@@ -133,9 +142,21 @@ input[type="search"] {
 .matches button span { color: var(--muted); font-size: 12px; white-space: nowrap; }
 .matches button:hover, .matches button:focus-visible { background: var(--line); }
 @media (max-width: 860px) {
-  .head { flex-direction: column; gap: 12px; padding: 14px 14px 4px; }
-  .legend { width: auto; }
-  .title-block h2 { font-size: 32px; }
+  .head { flex-direction: column; gap: 8px; padding: 12px 12px 2px; }
+  .title-block h2 { font-size: 28px; margin: 2px 0 6px; }
+  .title-block .facts { font-size: 13.5px; line-height: 1.4; }
+  /* the legend's swatches side by side, its notes full width */
+  .legend { width: auto; flex-direction: row; flex-wrap: wrap; gap: 2px 14px; font-size: 12px; }
+  .legend > .label, .legend > .cols, .legend > .row[style] { flex-basis: 100%; }
+}
+/* fingers: buttons at least 40 px tall, and inputs at 16 px so iOS doesn't zoom in on them */
+@media (pointer: coarse) {
+  .chips button { min-height: 40px; padding: 8px 13px; font-size: 14px; }
+  .tag { min-height: 32px; }
+  .tag button { min-width: 32px; min-height: 32px; }
+  input[type="search"], .check input[type="date"] { font-size: 16px; }
+  .check input[type="checkbox"] { width: 22px; height: 22px; }
+  .matches button { min-height: 44px; align-items: center; }
 }
 </style>
 </head>
@@ -172,6 +193,7 @@ input[type="search"] {
       <label class="check"><input type="checkbox" id="live" checked> Show the closures on <input type="date" id="liveday" aria-label="Day of the roadworks closures"></label>
       <p class="hint" id="livestatus"></p>
       <div class="chips" id="closedlist" role="group" aria-labelledby="l-closed"></div>
+      <p class="hint" id="closeddetail" hidden></p>
       <p class="hint">The roads the Government of Jersey's roadworks map shows closed that day. The map draws the detours by car, and colours each route by the minutes the closures add. Untick to see every road open.</p>
     </div>
 
@@ -180,7 +202,7 @@ input[type="search"] {
       <input type="search" id="dest" placeholder="Search a place, road or beach" autocomplete="off" aria-controls="matches">
       <div class="matches" id="matches" role="listbox" hidden></div>
       <div class="chips" id="quick"></div>
-      <p class="hint">Or click anywhere on the map to send every route there.</p>
+      <p class="hint" data-touch="Or tap the map, then Go here, to send every route there.">Or click anywhere on the map to send every route there.</p>
     </div>
 
     <div class="group" data-for="sheds">
@@ -191,7 +213,7 @@ input[type="search"] {
         <button type="button" data-v="picks" aria-pressed="false">My picks</button>
       </div>
       <div class="range" id="nbig-wrap"><input type="range" id="nbig" min="2" max="18" value="8" aria-label="Number of towns and villages"><output id="nbig-out">8</output></div>
-      <p class="hint">Every junction drains to the place it reaches fastest. With the parish churches, the dark lines are the real parish boundaries. Click the map to add or remove a place, which switches to My picks.</p>
+      <p class="hint" data-touch="Every junction drains to the place it reaches fastest. With the parish churches, the dark lines are the real parish boundaries. Tap the map, then Add, to add a place of your own.">Every junction drains to the place it reaches fastest. With the parish churches, the dark lines are the real parish boundaries. Click the map to add or remove a place, which switches to My picks.</p>
     </div>
 
     <div class="group" data-for="meet">
@@ -202,7 +224,7 @@ input[type="search"] {
         <button type="button" data-v="churches">Twelve parishes</button>
         <button type="button" data-v="clear">Clear</button>
       </div>
-      <p class="hint">Click the map to add or remove a traveller, or start from a preset.</p>
+      <p class="hint" data-touch="Tap the map to add a traveller or remove one, or start from a preset.">Click the map to add or remove a traveller, or start from a preset.</p>
       <span class="label" id="l-fair">Best spot means</span>
       <div class="chips ink" role="group" aria-labelledby="l-fair" id="fair">
         <button type="button" data-v="max" aria-pressed="true">Nobody travels too long</button>
@@ -250,12 +272,12 @@ input[type="search"] {
         <div class="loading" id="loading">Loading Jersey's roads…</div>
       </div>
     </div>
-    <p class="footnote" id="footnote">
+  </main>
+  <footer class="footnote" id="footnote">
       <span id="timing"></span><br>
       Roads and paths: OpenStreetMap (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL), each used only by those allowed on it; driveways, car parks and private roads are left out. By car: every road a car can use, A roads up to 34 mph, B roads 27, C roads 25, other lanes 23, estate roads 18, green lanes 12, each capped at 85% of the posted limit, plus 3 seconds for every junction passed; one-way streets respected; no traffic, lights or queues for the tunnel. The 20 mph island cuts every higher limit to 20 mph, at the same 85%. Road closures shut a stretch of road between two junctions, both ways, to through traffic; a journey may still start along a closed stretch, as someone living there would. The roadworks closures load in your browser from the Government of Jersey's roadworks map (<a href="https://roadworks.gov.je/JSW/roadworks.htm" target="_blank" rel="noopener">roadworks.gov.je</a>): works marked Road Closure that are approved or in progress on the chosen day, whatever their hours, matched to the roads they lie on; signed diversions are drawn for reference. Check the official map before you travel. By bike: 16 km/h on the flat (11 on rough tracks), slower uphill and up to 30 km/h down, plus 2 seconds a junction; bikes are pushed along footways and pedestrian streets and kept off steps; one-way streets respected unless bikes are let through. On foot: Tobler's hiking pace, 5 km/h on the flat, on every road, path and set of steps. Heights: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Mapzen terrain tiles</a> (EU-DEM, produced using Copernicus data and information funded by the European Union, and SRTM). People: each parish's 2021 census population (Statistics Jersey) spread over its homes by floor area, from OpenStreetMap buildings. Land: 50 m squares, each given to its nearest junction.
       Adapted from Doug Belshaw's <a href="https://roads.dougbelshaw.com" target="_blank" rel="noopener">All Roads Lead To (UK)</a>, after Ethan Mollick's <a href="https://all-roads-lead-to.netlify.app/" target="_blank" rel="noopener">US version</a> and “All Roads Lead to Richmond” by <a href="https://arterialmapping.wordpress.com/2022/03/20/all-roads-lead-to-richmond-2/" target="_blank" rel="noopener">Arterial Mapping</a>. <a href="https://github.com/JamesLeCuirot/all-roads-jersey" target="_blank" rel="noopener">Source code</a> (GPL-3.0).
-    </p>
-  </main>
+  </footer>
 </div>
 
 <script>
@@ -271,6 +293,7 @@ let G = null; // graph
 const CAR_ONLY = new Set(["slow", "closed"]); // maps that compare car times only
 const M = () => CAR_ONLY.has(S.kind) ? "time" : S.mode;
 const T = () => CAR_ONLY.has(S.kind) ? "car" : S.travel;
+const TOUCH = matchMedia("(pointer: coarse)").matches; // a phone or tablet: tap instead of hover
 const TRAVEL = { car: 0, bike: 1, foot: 2 };
 const NEAR_FACTOR = { car: 1, bike: 3, foot: 9 }; // the Nearby slider's minutes, by way of travelling
 
@@ -427,7 +450,7 @@ function layout() {
   const W = $("#wrap").clientWidth;
   const ratio = (b.y1 - b.y0) / (b.x1 - b.x0);
   const H = Math.round(W * ratio);
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const dpr = Math.min(3, window.devicePixelRatio || 1);
   for (const c of [cv, hv]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); c.style.height = H + "px"; }
   const s = W / (b.x1 - b.x0);
   view = { W, H, dpr, s, px: (x) => (x - b.x0) * s, py: (y) => (b.y1 - y) * s, ix: (px) => px / s + b.x0, iy: (py) => b.y1 - py / s };
@@ -849,15 +872,16 @@ function syncClosed() {
   else {
     const k = G.live.closures.length;
     st.innerHTML = `${k ? k + (k === 1 ? " closure" : " closures") : "No closures"} on ${esc(new Date(S.liveDay + "T12:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" }))}, from the <a href="https://roadworks.gov.je/JSW/roadworks.htm" target="_blank" rel="noopener">Government of Jersey roadworks map</a>` +
-      (G.live.offroad ? `; ${G.live.offroad} on paths cars don't use left out` : "") + ". Hover over one for its dates.";
+      (G.live.offroad ? `; ${G.live.offroad} on paths cars don't use left out` : "") + `. ${TOUCH ? "Tap" : "Click"} one for its dates.`;
   }
   const byRoad = new Map();
   for (const c of liveClosures()) { const k = c.road + "|" + c.timing; if (!byRoad.has(k)) byRoad.set(k, []); byRoad.get(k).push(c); }
   const when = (t) => t === "All Day" ? "" : ` <span style="color:var(--muted)">(${esc(t.replace("Btwn AM - PM Peak", "daytime").replace("After PM Peak", "evening").replace("Before AM Peak", "early"))})</span>`;
   const live = [...byRoad.values()].map((cs) => { const c = cs[0];
     const tip = cs.map((c) => `${c.parish ? c.parish + " · " : ""}${fmtJap(c.from)} to ${fmtJap(c.to)} · ${c.timing}${c.work ? " · " + c.work : ""}${c.promoter ? " (" + c.promoter + ")" : ""}`).join("\n");
-    return `<span class="tag live" title="${esc(tip)}"><span class="no-entry"></span>${esc(c.road)}${cs.length > 1 ? ` <span style="color:var(--muted)">×${cs.length}</span>` : ""}${when(c.timing)}</span>`; });
+    return `<button type="button" class="tag live" aria-pressed="false" title="${esc(tip)}" data-tip="${esc(tip)}"><span class="no-entry"></span>${esc(c.road)}${cs.length > 1 ? ` <span style="color:var(--muted)">×${cs.length}</span>` : ""}${when(c.timing)}</button>`; });
   $("#closedlist").innerHTML = live.join("");
+  $("#closeddetail").hidden = true;
 }
 function seedList() {
   if (S.seeds === "churches") return G.churches.map((c) => ({ name: G.parishes[c.parish], x: c.x, y: c.y, node: nodeAt(c), parish: c.parish }));
@@ -954,18 +978,24 @@ function legendRoads() {
   const c = classColor();
   $("#legend").innerHTML = `<div class="label">Road class</div>` +
     [["A road", c[0]], ["B road", c[1]], ["Other road", c[2]], ["Green lane (15 mph)", c[3]]].concat(T() === "car" ? [] : [[T() === "bike" ? "Path or cycleway" : "Path, cycleway or steps", c[4]]]).map(([n, col]) => `<div class="row"><span class="sw" style="background:${col}"></span>${n}</div>`).join("") +
-    `<div class="row" style="margin-top:6px;color:var(--muted)">Line width shows the ${S.weight === "pop" ? "people" : "land area"} whose route uses the ${T() === "car" ? "road" : "way"}. Hover over the map for any single route.</div>`;
+    `<div class="row" style="margin-top:6px;color:var(--muted)">Line width shows the ${S.weight === "pop" ? "people" : "land area"} whose route uses the ${T() === "car" ? "road" : "way"}. ${TOUCH ? "Tap" : "Hover over"} the map for any single route.</div>`;
 }
 
 // ---------- hover ----------
 function onMove(ev) {
   if (!current || !G || ev.pointerType === "touch") return;
+  showInfo(ev.clientX, ev.clientY, false);
+}
+// the time and route from the junction nearest a point, in the info box; on touch the box has an action button
+let tapped = -1;
+function showInfo(clientX, clientY, touch) {
   const r = cv.getBoundingClientRect();
-  const mx = ev.clientX - r.left, my = ev.clientY - r.top;
-  const i = nearestNode(G, view.ix(mx), view.iy(my), 0.8);
+  const mx = clientX - r.left, my = clientY - r.top;
+  const i = nearestNode(G, view.ix(mx), view.iy(my), touch ? 1.5 : 0.8);
   hx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0); hx.clearRect(0, 0, view.W, view.H);
   const tip = $("#tip");
-  if (i < 0) { tip.hidden = true; return; }
+  tip.classList.toggle("touch", touch);
+  if (i < 0 || !current) { tip.hidden = true; return -1; }
   const t = current.t;
   const road = roadAt(i, t ? t.arc[i] : -1);
   const head = `<b>${esc(road || placeName(G.x[i], G.y[i]))}</b><br><span class="m">${esc(road ? placeName(G.x[i], G.y[i]) + ", " : "")}${esc(parishOf(i))}</span><br>`;
@@ -990,11 +1020,17 @@ function onMove(ev) {
     } else html = head + `<span class="t">${fmtC(t.dist[i])}</span> to ${esc(S.destName)}`;
   }
   hx.beginPath(); hx.arc(view.px(G.x[i]), view.py(G.y[i]), 4, 0, 7); hx.fillStyle = css("--ink"); hx.fill();
+  if (touch) {
+    const picked = S.kind === "sheds" && S.seeds === "picks" && S.picks.some((p) => Math.hypot(p.x - G.x[i], p.y - G.y[i]) < 0.4);
+    const label = S.kind === "sheds" ? (picked ? "Remove this place" : "Add as a place") : "Go here";
+    html += `<button type="button" class="tip-go">${label}</button>`;
+  }
   tip.innerHTML = html; tip.hidden = false;
   const wr = $("#wrap").getBoundingClientRect();
-  const tx = ev.clientX - wr.left + 14, ty = ev.clientY - wr.top + 14;
+  const tx = clientX - wr.left + 14, ty = clientY - wr.top + 14;
   tip.style.left = Math.max(4, Math.min(tx, wr.width - tip.offsetWidth - 8)) + "px";
   tip.style.top = Math.max(4, ty + tip.offsetHeight + 8 > wr.height ? ty - tip.offsetHeight - 24 : ty) + "px";
+  return i;
 }
 // what to call a clicked junction: the place it's in, else the road it's on
 function nameFor(i) {
@@ -1003,10 +1039,16 @@ function nameFor(i) {
   const road = roadAt(i);
   return road ? road.replace(/ \([A-Z]\d+\)$/, "") : p;
 }
+// a click acts at once; a tap shows the info box first (but adds a traveller at once in Meet up)
+let lastPointer = "mouse";
 function onClick(ev) {
+  if (lastPointer === "touch" && S.kind !== "meet") { tapped = showInfo(ev.clientX, ev.clientY, true); return; }
   const r = cv.getBoundingClientRect();
   const x = view.ix(ev.clientX - r.left), y = view.iy(ev.clientY - r.top);
   const i = nearestNode(G, x, y, 1.5); if (i < 0) return;
+  actAt(i, x, y);
+}
+function actAt(i, x, y) {
   const nm = nameFor(i);
   if (S.kind === "sheds") {
     if (S.seeds !== "picks") { S.picks = seedList().slice(); S.seeds = "picks"; syncChips(); setHash(); }
@@ -1101,8 +1143,18 @@ function initControls() {
   $("#live").addEventListener("change", (e) => { S.live = e.target.checked; setHash(); render(); });
   $("#liveday").addEventListener("change", (e) => { if (!e.target.value) return; S.liveDay = e.target.value; setHash(); render(); });
   cv.addEventListener("pointermove", onMove);
-  cv.addEventListener("pointerleave", () => { $("#tip").hidden = true; hx.clearRect(0, 0, view.W, view.H); });
+  cv.addEventListener("pointerdown", (ev) => { lastPointer = ev.pointerType; });
+  cv.addEventListener("pointerleave", (ev) => { if (ev.pointerType === "touch") return; $("#tip").hidden = true; hx.clearRect(0, 0, view.W, view.H); });
   cv.addEventListener("click", onClick);
+  $("#tip").addEventListener("click", (e) => { if (!e.target.closest(".tip-go") || tapped < 0) return; actAt(tapped, G.x[tapped], G.y[tapped]); tapped = -1; });
+  $("#closedlist").addEventListener("click", (e) => {
+    const b = e.target.closest(".tag.live"); if (!b) return;
+    const on = b.getAttribute("aria-pressed") !== "true";
+    for (const t of document.querySelectorAll("#closedlist .tag.live")) t.setAttribute("aria-pressed", "false");
+    b.setAttribute("aria-pressed", String(on));
+    const d = $("#closeddetail"); d.hidden = !on; d.innerHTML = on ? b.dataset.tip.split("\n").map(esc).join("<br>") : "";
+  });
+  if (TOUCH) for (const h of document.querySelectorAll(".hint[data-touch]")) h.textContent = h.dataset.touch;
   let rt; new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { layout(); render(); }, 120); }).observe($("#wrap"));
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
   new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });

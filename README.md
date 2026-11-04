@@ -2,7 +2,7 @@
 
 ![The four maps: routes to St Helier, the parish-church watersheds, the fairest place for the four corners of the island to meet, and the minutes today's speed limits save over a 20 mph island](docs/modes.png)
 
-Every road junction in Jersey, from the A roads to the green lanes, routes to one destination, and the map draws the tree of quickest routes. Thicker lines carry more of the island. A Jersey edition of Doug Belshaw's [All Roads Lead To (UK)](https://framagit.org/dajbelshaw/all-roads-uk), itself after Ethan Mollick's [All Roads Lead To](https://all-roads-lead-to.netlify.app/) and Arterial Mapping's “All Roads Lead to Richmond”.
+Every road junction in Jersey, from the A roads to the green lanes, routes to one destination, and the map draws the tree of quickest routes. Thicker lines carry more of the island. A Jersey edition of Doug Belshaw's [All Roads Lead To (UK)](https://framagit.org/dajbelshaw/all-roads-uk), which I came across in [his LinkedIn post](https://www.linkedin.com/posts/dajbelshaw_30daymapchallenge-maps-openstreetmap-share-7523387867037990913-yrNQ/), itself after Ethan Mollick's [All Roads Lead To](https://all-roads-lead-to.netlify.app/) and Arterial Mapping's “All Roads Lead to Richmond”.
 
 Live at https://www.lecuirot.je/roads/
 

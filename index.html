@@ -122,7 +122,7 @@ input[type="search"] {
 .check { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13.5px; }
 .check input[type="checkbox"] { accent-color: var(--closed); width: 15px; height: 15px; margin: 0; }
 .check input[type="date"] { font: inherit; font-size: 13px; padding: 3px 6px; border: 1px solid var(--line); border-radius: 3px; background: var(--land); color: var(--ink); }
-.tag.live { border-style: dashed; }
+.tag.live { border-style: dashed; padding-right: 8px; }
 .tag .no-entry { width: 10px; height: 10px; border-radius: 50%; background: var(--closed); flex: none; position: relative; }
 .tag .no-entry::after { content: ""; position: absolute; left: 2px; right: 2px; top: 4px; height: 2px; background: #fff; }
 .matches { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
@@ -165,12 +165,11 @@ input[type="search"] {
     </div>
 
     <div class="group" data-for="closed">
-      <span class="label" id="l-closed">Closed roads</span>
-      <label class="check"><input type="checkbox" id="live" checked> Roadworks closures on <input type="date" id="liveday" aria-label="Day of the roadworks closures"></label>
+      <span class="label" id="l-closed">Roadworks closures</span>
+      <label class="check"><input type="checkbox" id="live" checked> Show the closures on <input type="date" id="liveday" aria-label="Day of the roadworks closures"></label>
       <p class="hint" id="livestatus"></p>
       <div class="chips" id="closedlist" role="group" aria-labelledby="l-closed"></div>
-      <p class="hint" id="closedhint">Click any road on the map to close it too, and click a closed road to reopen it. The map shows the detours by car, and colours each route by the minutes the closures add.</p>
-      <div class="chips"><button type="button" id="reopen" hidden>Reopen all</button></div>
+      <p class="hint">The roads the Government of Jersey's roadworks map shows closed that day. The map draws the detours by car, and colours each route by the minutes the closures add. Untick to see every road open.</p>
     </div>
 
     <div class="group" data-for="one slow closed">
@@ -178,7 +177,7 @@ input[type="search"] {
       <input type="search" id="dest" placeholder="Search a place, road or beach" autocomplete="off" aria-controls="matches">
       <div class="matches" id="matches" role="listbox" hidden></div>
       <div class="chips" id="quick"></div>
-      <p class="hint" data-for="one slow">Or click anywhere on the map to send every route there.</p>
+      <p class="hint">Or click anywhere on the map to send every route there.</p>
     </div>
 
     <div class="group" data-for="sheds">
@@ -264,7 +263,7 @@ const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v
 const BASE = /\/$|\.html?$/.test(location.pathname) ? "" : location.pathname.replace(/^.*\//, "") + "/";
 
 const S = { kind: "one", dest: null, destXY: null, destName: "", mode: "time", travel: "car", scope: "all", near: 8, weight: "area",
-  seeds: "churches", nbig: 8, picks: [], travellers: [], fair: "max", closed: [], live: true, liveDay: "", liveOff: new Set() };
+  seeds: "churches", nbig: 8, picks: [], travellers: [], fair: "max", live: true, liveDay: "" };
 let G = null; // graph
 const CAR_ONLY = new Set(["slow", "closed"]); // maps that compare car times only
 const M = () => CAR_ONLY.has(S.kind) ? "time" : S.mode;
@@ -647,13 +646,6 @@ function twinOf(hit) {
   return nearestCarEdge(hit.x, hit.y, 0.06, (e, dx, dy) =>
     e !== hit.e && carWay(e) !== 0 && baseName(e) === nm && (dx * hit.dx + dy * hit.dy) * carWay(e) * way < -0.5);
 }
-// close the stretch nearest a click, and the other carriageway beside it
-function closureAt(x, y, maxKm) {
-  const hit = nearestCarEdge(x, y, maxKm); if (!hit) return null;
-  const pts = [{ x: hit.x, y: hit.y, e: hit.e }], twin = twinOf(hit);
-  if (twin) pts.push({ x: twin.x, y: twin.y, e: twin.e });
-  return { pts, e: hit.e, x: hit.x, y: hit.y };
-}
 
 // ---------- roadworks closures, live from the Government of Jersey's roadworks map ----------
 const ROADWORKS = "https://roadworks.gov.je/arcgis/rest/services/JSW/MapServer/3/query";
@@ -737,7 +729,7 @@ function matchLines(lines, road = "") {
   return [...edges];
 }
 const liveReady = () => S.live && G.live && G.live.day === S.liveDay;
-const liveClosures = () => liveReady() ? G.live.closures.filter((c) => !S.liveOff.has(c.key)) : [];
+const liveClosures = () => liveReady() ? G.live.closures : [];
 function ensureLive() {
   if (!S.live || liveReady() || liveLoading === S.liveDay) return;
   const day = liveLoading = S.liveDay;
@@ -772,21 +764,16 @@ function closedSearch(dest, closed) {
   for (let i = 0; i < n; i++) { let b = i; for (let k = 1; k < 3; k++) if (dist[i + k * n] < dist[b]) b = i + k * n; best[i] = b; d[i] = dist[b]; arc[i] = varc[b]; }
   return { dist: d, arc, best, varc, par, order: order.subarray(0, cnt), start };
 }
-// the closed stretches as edges: a clicked closure is kept as a point on its road, so links survive a rebuild
+// the closed stretches as edges
 function closedEdges() {
   const mask = new Uint8Array(G.m);
-  for (const c of S.closed) {
-    for (const q of c.pts) { const hit = nearestCarEdge(q.x, q.y, 0.05); q.e = hit ? hit.e : -1; if (hit) mask[hit.e] = 1; }
-    c.e = c.pts[0].e; c.x = c.pts[0].x; c.y = c.pts[0].y;
-  }
   for (const c of liveClosures()) for (const e of c.edges) mask[e] = 1;
   return mask;
 }
 function renderClosed() {
   ensureLive();
   const closed = closedEdges(), live = liveClosures();
-  const n = S.closed.filter((c) => c.e >= 0).length + live.length;
-  const shut = S.closed.flatMap((c) => c.pts).filter((q) => q.e >= 0).map((q) => q.e).concat(live.flatMap((c) => c.edges));
+  const n = live.length, shut = live.flatMap((c) => c.edges);
   const t = dijkstra([S.dest]), t2 = closedSearch(S.dest, closed);
   const sc = scopeFor(t), w = weights(sc);
   // flows over the (junction, state) tree
@@ -821,7 +808,6 @@ function renderClosed() {
     ctx.beginPath(); for (const e of shut) tracePath(ctx, e * 2); ctx.stroke();
   }
   ctx.restore();
-  for (const c of S.closed) if (c.e >= 0) noEntry(ctx, c.x, c.y);
   for (const c of live) noEntry(ctx, c.x, c.y);
   marker(ctx, G.x[S.dest], G.y[S.dest], 6, css("--route-no"), "");
   current = { t: t2, t1: t, closedView: true, vt: t2 };
@@ -834,7 +820,8 @@ function renderClosed() {
       (worst >= 0 && t2.dist[worst] - t.dist[worst] >= 0.5 ? `; worst: ${esc(placeName(G.x[worst], G.y[worst]))}, <b>+${fmtT(t2.dist[worst] - t.dist[worst], true)}</b>.` : ".") +
       (towns.length ? `<br>Hardest hit: ` + towns.map((r) => `${esc(r.p.name)} +${fmtT(r.d, true)}`).join(" · ") : "") +
       (cut > 0 ? `<br><b>${cutPct < 0.1 ? "Under 0.1" : cutPct.toFixed(1)}%</b> of the ${unitWord()} is cut off: no way through by car.` : "")
-      : S.live && !liveReady() ? `Loading today's roadworks closures…` : `Every road is open. Click a road on the map to close it and see the detours.`);
+      : !S.live ? `Every road is open: the roadworks closures are switched off.` : !liveReady() ? `Loading the roadworks closures…`
+      : G.live.error ? `The roadworks map didn't load, so every road is shown open.` : `No roads closed for roadworks that day.`);
   syncClosed();
   const steps = [0, 1, 2, 3, 5];
   $("#legend").innerHTML = `<div class="label">Time the closures add</div>` +
@@ -850,27 +837,24 @@ function noEntry(c, x, y) {
   c.lineWidth = 1.5; c.strokeStyle = "#fff"; c.stroke();
   c.fillStyle = "#fff"; c.fillRect(X - 4, Y - 1.25, 8, 2.5);
 }
-const closedName = (c) => (c.e >= 0 && G.en[c.e] ? G.names[G.en[c.e]] : "") || placeName(c.x, c.y).replace(/^near /, "Lane near ");
 function syncClosed() {
   $("#live").checked = S.live; $("#liveday").value = S.liveDay;
   const st = $("#livestatus");
   if (!S.live) st.textContent = "";
   else if (!liveReady()) st.textContent = "Loading the roadworks map…";
-  else if (G.live.error) st.textContent = `Couldn't load the roadworks map (${G.live.error}). You can still close roads by clicking them.`;
+  else if (G.live.error) st.textContent = `Couldn't load the roadworks map (${G.live.error}). Try again later.`;
   else {
     const k = G.live.closures.length;
     st.innerHTML = `${k ? k + (k === 1 ? " closure" : " closures") : "No closures"} on ${esc(new Date(S.liveDay + "T12:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long" }))}, from the <a href="https://roadworks.gov.je/JSW/roadworks.htm" target="_blank" rel="noopener">Government of Jersey roadworks map</a>` +
-      (G.live.offroad ? `; ${G.live.offroad} on paths cars don't use left out` : "") + (S.liveOff.size ? `; ${S.liveOff.size} reopened by you` : "") + ".";
+      (G.live.offroad ? `; ${G.live.offroad} on paths cars don't use left out` : "") + ". Hover over one for its dates.";
   }
   const byRoad = new Map();
   for (const c of liveClosures()) { const k = c.road + "|" + c.timing; if (!byRoad.has(k)) byRoad.set(k, []); byRoad.get(k).push(c); }
   const when = (t) => t === "All Day" ? "" : ` <span style="color:var(--muted)">(${esc(t.replace("Btwn AM - PM Peak", "daytime").replace("After PM Peak", "evening").replace("Before AM Peak", "early"))})</span>`;
   const live = [...byRoad.values()].map((cs) => { const c = cs[0];
     const tip = cs.map((c) => `${c.parish ? c.parish + " · " : ""}${fmtJap(c.from)} to ${fmtJap(c.to)} · ${c.timing}${c.work ? " · " + c.work : ""}${c.promoter ? " (" + c.promoter + ")" : ""}`).join("\n");
-    return `<span class="tag live" title="${esc(tip)}"><span class="no-entry"></span>${esc(c.road)}${cs.length > 1 ? ` <span style="color:var(--muted)">×${cs.length}</span>` : ""}${when(c.timing)}<button type="button" data-k="${esc(cs.map((c) => c.key).join("\u0001"))}" aria-label="Reopen ${esc(c.road)}">×</button></span>`; });
-  const mine = S.closed.map((c, i) => `<span class="tag"><span class="no-entry"></span>${esc(closedName(c))}<button type="button" data-i="${i}" aria-label="Reopen ${esc(closedName(c))}">×</button></span>`);
-  $("#closedlist").innerHTML = mine.concat(live).join("");
-  $("#reopen").hidden = !(S.closed.length || liveClosures().length);
+    return `<span class="tag live" title="${esc(tip)}"><span class="no-entry"></span>${esc(c.road)}${cs.length > 1 ? ` <span style="color:var(--muted)">×${cs.length}</span>` : ""}${when(c.timing)}</span>`; });
+  $("#closedlist").innerHTML = live.join("");
 }
 function seedList() {
   if (S.seeds === "churches") return G.churches.map((c) => ({ name: G.parishes[c.parish], x: c.x, y: c.y, node: nodeAt(c), parish: c.parish }));
@@ -1019,13 +1003,6 @@ function nameFor(i) {
 function onClick(ev) {
   const r = cv.getBoundingClientRect();
   const x = view.ix(ev.clientX - r.left), y = view.iy(ev.clientY - r.top);
-  if (S.kind === "closed") {
-    const hit = closureAt(x, y, 14 / view.s); if (!hit) return;
-    const k = S.closed.findIndex((c) => c.pts.some((q) => hit.pts.some((h) => h.e === q.e)));
-    const lc = liveClosures().find((c) => hit.pts.some((h) => c.edges.includes(h.e)));
-    if (k >= 0) S.closed.splice(k, 1); else if (lc) S.liveOff.add(lc.key); else if (S.closed.length < 40) S.closed.push(hit);
-    setHash(); render(); return;
-  }
   const i = nearestNode(G, x, y, 1.5); if (i < 0) return;
   const nm = nameFor(i);
   if (S.kind === "sheds") {
@@ -1053,8 +1030,7 @@ function setDest(x, y, name, hash = true) {
 function setHash() {
   const d = slug(S.destName.replace(/^near /, ""));
   const h = S.kind === "sheds" ? (S.seeds === "villages" ? "villages" : "watersheds") : S.kind === "meet" ? "meet-up" : S.kind === "slow" ? "20-mph-" + d
-    : S.kind === "closed" ? "closures-" + d + (!S.live ? "/d=none" : S.liveDay !== todayISO() ? "/d=" + S.liveDay.replace(/-/g, "") : "")
-      + (S.closed.length ? "/c=" + S.closed.map((c) => c.pts.map((q) => Math.round(q.x * 1000).toString(36) + "." + Math.round(q.y * 1000).toString(36)).join("~")).join("_") : "") : d;
+    : S.kind === "closed" ? "closures-" + d + (!S.live ? "/d=none" : S.liveDay !== todayISO() ? "/d=" + S.liveDay.replace(/-/g, "") : "") : d;
   try { history.replaceState(null, "", "#" + h + (T() === "car" ? "" : "/" + T())); } catch (e) {}
 }
 function syncChips() {
@@ -1119,14 +1095,8 @@ function initControls() {
   $("#near").addEventListener("input", (e) => { S.near = +e.target.value; syncChips(); render(); });
   $("#tpresets").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; loadPreset(b.dataset.v); render(); });
   $("#travellers").addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (!b) return; S.travellers.splice(+b.dataset.i, 1); syncTravellers(); render(); });
-  $("#closedlist").addEventListener("click", (e) => {
-    const b = e.target.closest("button"); if (!b) return;
-    if (b.dataset.k) for (const k of b.dataset.k.split("\u0001")) S.liveOff.add(k); else S.closed.splice(+b.dataset.i, 1);
-    setHash(); render();
-  });
-  $("#reopen").addEventListener("click", () => { S.closed = []; if (liveReady()) for (const c of G.live.closures) S.liveOff.add(c.key); setHash(); render(); });
-  $("#live").addEventListener("change", (e) => { S.live = e.target.checked; S.liveOff = new Set(); setHash(); render(); });
-  $("#liveday").addEventListener("change", (e) => { if (!e.target.value) return; S.liveDay = e.target.value; S.liveOff = new Set(); setHash(); render(); });
+  $("#live").addEventListener("change", (e) => { S.live = e.target.checked; setHash(); render(); });
+  $("#liveday").addEventListener("change", (e) => { if (!e.target.value) return; S.liveDay = e.target.value; setHash(); render(); });
   cv.addEventListener("pointermove", onMove);
   cv.addEventListener("pointerleave", () => { $("#tip").hidden = true; hx.clearRect(0, 0, view.W, view.H); });
   cv.addEventListener("click", onClick);
@@ -1155,9 +1125,7 @@ function fromHash() {
     const [head, ...parts] = h.split("/");
     const part = (k) => (parts.find((p) => p.startsWith(k + "=")) || "").slice(k.length + 1);
     const day = part("d");
-    S.live = day !== "none"; S.liveDay = /^\d{8}$/.test(day) ? `${day.slice(0, 4)}-${day.slice(4, 6)}-${day.slice(6, 8)}` : todayISO(); S.liveOff = new Set();
-    S.closed = part("c").split("_").filter(Boolean).map((c) => ({ e: -1, pts: c.split("~").map((p) => { const [x, y] = p.split(".").map((v) => parseInt(v, 36) / 1000); return { x, y, e: -1 }; })
-      .filter((q) => isFinite(q.x) && isFinite(q.y)) })).filter((c) => c.pts.length);
+    S.live = day !== "none"; S.liveDay = /^\d{8}$/.test(day) ? `${day.slice(0, 4)}-${day.slice(4, 6)}-${day.slice(6, 8)}` : todayISO();
     h = head.slice(9); if (!h) return;
   }
   if (h) { const s = G.search.find((s) => slug(s.name) === h); if (s) setDest(s.x, s.y, s.name, false); }
@@ -1170,7 +1138,7 @@ function fromHash() {
   const home = findName("St Helier"); setDest(home.x, home.y, home.name, false);
   fromHash();
   initControls(); syncChips(); layout(); render();
-  addEventListener("hashchange", () => { S.kind = "one"; S.seeds = "churches"; S.closed = []; fromHash(); syncChips(); render(); });
+  addEventListener("hashchange", () => { S.kind = "one"; S.seeds = "churches"; fromHash(); syncChips(); render(); });
 })();
 </script>
 </body>

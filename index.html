@@ -36,6 +36,7 @@
   --b-road: #d27a00;
   --road: #2a3034;
   --green-lane: #2e8540;
+  --path: #7a5ab8;
   --route-no: #f6c90e;
   --font-display: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
   --font-body: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
@@ -44,12 +45,12 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --sea: #0f1619; --land: #1a2226; --panel: #151c20; --ink: #e6ebec; --muted: #94a1a7; --line: #2b363b; --net: #263136;
-    --a-road: #ff5c70; --b-road: #f2a93b; --road: #d4dadc; --green-lane: #5cc27a; color-scheme: dark;
+    --a-road: #ff5c70; --b-road: #f2a93b; --road: #d4dadc; --green-lane: #5cc27a; --path: #b79cf0; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --sea: #0f1619; --land: #1a2226; --panel: #151c20; --ink: #e6ebec; --muted: #94a1a7; --line: #2b363b; --net: #263136;
-  --a-road: #ff5c70; --b-road: #f2a93b; --road: #d4dadc; --green-lane: #5cc27a; color-scheme: dark;
+  --a-road: #ff5c70; --b-road: #f2a93b; --road: #d4dadc; --green-lane: #5cc27a; --path: #b79cf0; color-scheme: dark;
 }
 [hidden] { display: none !important; }
 html, body { height: 100%; }
@@ -132,7 +133,7 @@ input[type="search"] {
   <aside class="rail" aria-label="Map controls">
     <div class="brand">
       <h1>All Roads Lead To <small>Jersey edition</small></h1>
-      <p>Pick a destination. Every road junction in Jersey routes to it, from A roads to green lanes, and the map draws the tree of quickest routes. Thicker lines carry more of the island.</p>
+      <p>Pick a destination. Every junction in Jersey routes to it, by car, by bike or on foot, and the map draws the tree of quickest routes. Thicker lines carry more of the island.</p>
     </div>
 
     <div class="group">
@@ -142,6 +143,15 @@ input[type="search"] {
         <button type="button" data-v="sheds" aria-pressed="false">Watersheds</button>
         <button type="button" data-v="meet" aria-pressed="false">Meet up</button>
         <button type="button" data-v="slow" aria-pressed="false">20 mph island</button>
+      </div>
+    </div>
+
+    <div class="group" data-for="one sheds meet">
+      <span class="label" id="l-travel">Travel by</span>
+      <div class="chips" role="group" aria-labelledby="l-travel" id="travel">
+        <button type="button" data-v="car" aria-pressed="true">Car</button>
+        <button type="button" data-v="bike" aria-pressed="false">Bike</button>
+        <button type="button" data-v="foot" aria-pressed="false">On foot</button>
       </div>
     </div>
 
@@ -161,7 +171,7 @@ input[type="search"] {
         <button type="button" data-v="picks" aria-pressed="false">My picks</button>
       </div>
       <div class="range" id="nbig-wrap"><input type="range" id="nbig" min="2" max="18" value="8" aria-label="Number of towns and villages"><output id="nbig-out">8</output></div>
-      <p class="hint">Every junction drains to the place it can reach fastest. With the parish churches, the dark lines are the real parish boundaries. Click the map to add or remove a place, which switches to My picks.</p>
+      <p class="hint">Every junction drains to the place it reaches fastest. With the parish churches, the dark lines are the real parish boundaries. Click the map to add or remove a place, which switches to My picks.</p>
     </div>
 
     <div class="group" data-for="meet">
@@ -175,8 +185,8 @@ input[type="search"] {
       <p class="hint">Click the map to add or remove a traveller, or start from a preset.</p>
       <span class="label" id="l-fair">Best spot means</span>
       <div class="chips ink" role="group" aria-labelledby="l-fair" id="fair">
-        <button type="button" data-v="max" aria-pressed="true">Nobody drives too long</button>
-        <button type="button" data-v="sum" aria-pressed="false">Least total driving</button>
+        <button type="button" data-v="max" aria-pressed="true">Nobody travels too long</button>
+        <button type="button" data-v="sum" aria-pressed="false">Least total travel</button>
       </div>
     </div>
 
@@ -222,7 +232,7 @@ input[type="search"] {
     </div>
     <p class="footnote" id="footnote">
       <span id="timing"></span><br>
-      Roads: every OpenStreetMap road a car can use in Jersey, from A roads to green lanes; service roads, tracks and private roads are left out (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL). Speeds by road: A roads up to 34 mph, B roads 27, C roads 25, other lanes 23, estate roads 18, green lanes 12, each capped at 85% of the posted limit, plus 3 seconds for every junction passed. One-way streets are respected. No traffic, lights or queues for the tunnel. The 20 mph island cuts every higher limit to 20 mph, at the same 85%. People: each parish's 2021 census population (Statistics Jersey) spread over its homes by floor area, from OpenStreetMap buildings. Land: 50 m squares, each given to its nearest junction.
+      Roads and paths: OpenStreetMap (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL), each used only by those allowed on it; driveways, car parks and private roads are left out. By car: every road a car can use, A roads up to 34 mph, B roads 27, C roads 25, other lanes 23, estate roads 18, green lanes 12, each capped at 85% of the posted limit, plus 3 seconds for every junction passed; one-way streets respected; no traffic, lights or queues for the tunnel. The 20 mph island cuts every higher limit to 20 mph, at the same 85%. By bike: 16 km/h on the flat (11 on rough tracks), slower uphill and up to 30 km/h down, plus 2 seconds a junction; bikes are pushed along footways and pedestrian streets and kept off steps; one-way streets respected unless bikes are let through. On foot: Tobler's hiking pace, 5 km/h on the flat, on every road, path and set of steps. Heights: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Mapzen terrain tiles</a> (EU-DEM, produced using Copernicus data and information funded by the European Union, and SRTM). People: each parish's 2021 census population (Statistics Jersey) spread over its homes by floor area, from OpenStreetMap buildings. Land: 50 m squares, each given to its nearest junction.
       Adapted from Doug Belshaw's <a href="https://roads.dougbelshaw.com" target="_blank" rel="noopener">All Roads Lead To (UK)</a>, after Ethan Mollick's <a href="https://all-roads-lead-to.netlify.app/" target="_blank" rel="noopener">US version</a> and “All Roads Lead to Richmond” by <a href="https://arterialmapping.wordpress.com/2022/03/20/all-roads-lead-to-richmond-2/" target="_blank" rel="noopener">Arterial Mapping</a>. <a href="https://github.com/JamesLeCuirot/all-roads-jersey" target="_blank" rel="noopener">Source code</a> (GPL-3.0).
     </p>
   </main>
@@ -235,10 +245,13 @@ const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v
 // Served at /, at /roads/, or at /roads with no slash (as a rewrite from another site serves it)
 const BASE = /\/$|\.html?$/.test(location.pathname) ? "" : location.pathname.replace(/^.*\//, "") + "/";
 
-const S = { kind: "one", dest: null, destName: "", mode: "time", scope: "all", near: 8, weight: "area",
+const S = { kind: "one", dest: null, destXY: null, destName: "", mode: "time", travel: "car", scope: "all", near: 8, weight: "area",
   seeds: "churches", nbig: 8, picks: [], travellers: [], fair: "max" };
 let G = null; // graph
 const M = () => S.kind === "slow" ? "time" : S.mode; // the 20 mph map only compares times
+const T = () => S.kind === "slow" ? "car" : S.travel; // ... by car
+const TRAVEL = { car: 0, bike: 1, foot: 2 };
+const NEAR_FACTOR = { car: 1, bike: 3, foot: 9 }; // the Nearby slider's minutes, by way of travelling
 
 // ---------- data ----------
 function dec(b64, T) {
@@ -256,28 +269,19 @@ async function load() {
   if (!r.ok) throw new Error("HTTP " + r.status);
   const d = await r.json();
   const g = { n: d.n, m: d.m, x: dec(d.x, Float32Array), y: dec(d.y, Float32Array),
-    eu: dec(d.eu, Int32Array), ev: dec(d.ev, Int32Array), ec: dec(d.ec, Int8Array), ed: dec(d.ed, Int8Array),
+    eu: dec(d.eu, Int32Array), ev: dec(d.ev, Int32Array), ec: dec(d.ec, Int8Array), ea: dec(d.ea, Int8Array), mask: dec(d.mask, Int8Array),
     et: dec(d.et, Float32Array), es: dec(d.es, Float32Array), slow: d.slow_limit, ek: dec(d.ek, Float32Array), en: dec(d.en, Int16Array),
-    go: dec(d.go, Int32Array), gp: dec(d.gp, Int16Array),
-    area: dec(d.area, Float32Array), pop: dec(d.pop, Float32Array), parish: dec(d.parish, Int8Array),
+    ebf: dec(d.ebf, Float32Array), ebb: dec(d.ebb, Float32Array), ewf: dec(d.ewf, Float32Array), ewb: dec(d.ewb, Float32Array),
+    go: dec(d.go, Int32Array), gp: dec(d.gp, Int16Array), parish: dec(d.parish, Int8Array),
+    area: {}, pop: {}, nets: {}, costs: {},
     parishes: d.parishes, census: d.census, outline: d.outline, names: d.names, places: d.places, roads: d.roads,
     churches: d.churches, proj: d.proj, q: d.proj.q };
+  for (const t in TRAVEL) { g.area[t] = dec(d.area[t], Float32Array); g.pop[t] = dec(d.pop[t], Float32Array); }
   // arcs: a = edge*2 (+1 when travelled v->u)
-  const outDeg = new Int32Array(g.n + 1), inDeg = new Int32Array(g.n + 1);
-  const arcs = [];
-  for (let e = 0; e < g.m; e++) {
-    if (g.ed[e] & 1) arcs.push(e * 2);
-    if (g.ed[e] & 2) arcs.push(e * 2 + 1);
-  }
-  const from = (a) => (a & 1) ? g.ev[a >> 1] : g.eu[a >> 1];
-  const to = (a) => (a & 1) ? g.eu[a >> 1] : g.ev[a >> 1];
-  for (const a of arcs) { outDeg[from(a) + 1]++; inDeg[to(a) + 1]++; }
-  for (let i = 0; i < g.n; i++) { outDeg[i + 1] += outDeg[i]; inDeg[i + 1] += inDeg[i]; }
-  g.outOff = outDeg; g.inOff = inDeg;
-  g.outArc = new Int32Array(arcs.length); g.inArc = new Int32Array(arcs.length);
-  const oc = outDeg.slice(0, g.n), ic = inDeg.slice(0, g.n);
-  for (const a of arcs) { g.outArc[oc[from(a)]++] = a; g.inArc[ic[to(a)]++] = a; }
-  g.from = from; g.to = to;
+  g.from = (a) => (a & 1) ? g.ev[a >> 1] : g.eu[a >> 1];
+  g.to = (a) => (a & 1) ? g.eu[a >> 1] : g.ev[a >> 1];
+  g.count = {};
+  for (const t in TRAVEL) { let c = 0; for (let i = 0; i < g.n; i++) if (g.mask[i] & (1 << TRAVEL[t])) c++; g.count[t] = c; }
   // a road name at every junction, for labels: the biggest named road through it
   g.nodeName = new Int16Array(g.n); const best = new Int8Array(g.n).fill(9);
   for (let e = 0; e < g.m; e++) {
@@ -294,23 +298,55 @@ async function load() {
     const k = Math.floor(g.x[i] / g.B) + "," + Math.floor(g.y[i] / g.B);
     let b = g.bins.get(k); if (!b) g.bins.set(k, b = []); b.push(i);
   }
-  for (const p of g.places) p.node = nearestNode(g, p.x, p.y, 3);
-  for (const c of g.churches) c.node = nearestNode(g, c.x, c.y, 3);
+  // a name is a path when most of its length is path: a street whose pavement shares its name stays a road
+  const pathKm = new Map();
+  for (let e = 0; e < g.m; e++) {
+    if (!g.en[e]) continue;
+    const nm = g.names[g.en[e]].replace(/ \([^)]*\)$/, "");
+    pathKm.set(nm, (pathKm.get(nm) || 0) + (g.ec[e] === 4 ? g.ek[e] : -g.ek[e]));
+  }
   g.hoods = g.places.filter((p) => HOOD_KINDS.has(p.kind));
   g.villages = VILLAGES.map((n) => g.places.find((p) => p.name === n)).filter(Boolean);
-  g.search = g.places.map((p) => ({ name: p.name, kind: KIND_LABEL[p.kind] || p.kind, node: p.node, rank: HOOD_KINDS.has(p.kind) ? 0 : 1 }))
-    .concat(g.roads.map(([name, node]) => ({ name, kind: "Road", node, rank: 2 })));
+  g.search = g.places.map((p) => ({ name: p.name, kind: KIND_LABEL[p.kind] || p.kind, x: p.x, y: p.y, rank: HOOD_KINDS.has(p.kind) ? 0 : 1 }))
+    .concat(g.roads.map(([name, node]) => ({ name, kind: pathKm.get(name) > 0 ? "Path" : "Road", x: g.x[node], y: g.y[node], rank: 2 })));
   for (const s of g.search) s.key = fold(s.name);
   return g;
 }
-function nearestNode(g, x, y, maxKm = 2) {
+// the junctions and arcs one way of travelling may use, built the first time it's asked for
+function net(t) {
+  const g = G;
+  if (g.nets[t]) return g.nets[t];
+  const fb = 1 << (2 * TRAVEL[t]), bb = fb << 1;
+  const arcs = [];
+  for (let e = 0; e < g.m; e++) { if (g.ea[e] & fb) arcs.push(e * 2); if (g.ea[e] & bb) arcs.push(e * 2 + 1); }
+  const outOff = new Int32Array(g.n + 1), inOff = new Int32Array(g.n + 1);
+  for (const a of arcs) { outOff[g.from(a) + 1]++; inOff[g.to(a) + 1]++; }
+  for (let i = 0; i < g.n; i++) { outOff[i + 1] += outOff[i]; inOff[i + 1] += inOff[i]; }
+  const outArc = new Int32Array(arcs.length), inArc = new Int32Array(arcs.length);
+  const oc = outOff.slice(0, g.n), ic = inOff.slice(0, g.n);
+  for (const a of arcs) { outArc[oc[g.from(a)]++] = a; inArc[ic[g.to(a)]++] = a; }
+  return (g.nets[t] = { outOff, inOff, outArc, inArc });
+}
+// the cost of every arc, for one way of travelling and one measure: minutes, or km
+function arcCost(t, mode) {
+  const g = G, key = t + "|" + mode;
+  if (g.costs[key]) return g.costs[key];
+  const c = new Float32Array(g.m * 2);
+  const [f, b] = mode === "dist" ? [g.ek, g.ek] : mode === "slow" ? [g.es, g.es] : t === "bike" ? [g.ebf, g.ebb] : t === "foot" ? [g.ewf, g.ewb] : [g.et, g.et];
+  for (let e = 0; e < g.m; e++) { c[e * 2] = f[e]; c[e * 2 + 1] = b[e]; }
+  return (g.costs[key] = c);
+}
+const usable = (e, t = T()) => G.ea[e] & (3 << (2 * TRAVEL[t]));
+// nearest junction the given way of travelling can use
+function nearestNode(g, x, y, maxKm = 2, t = T()) {
+  const bit = 1 << TRAVEL[t];
   const bx = Math.floor(x / g.B), by = Math.floor(y / g.B);
   let best = Infinity, bi = -1;
   for (let r = 0; r <= Math.ceil(maxKm / g.B); r++) {
     for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) {
       if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
       const b = g.bins.get((bx + dx) + "," + (by + dy)); if (!b) continue;
-      for (const i of b) { const d = (g.x[i] - x) ** 2 + (g.y[i] - y) ** 2; if (d < best) { best = d; bi = i; } }
+      for (const i of b) { if (!(g.mask[i] & bit)) continue; const d = (g.x[i] - x) ** 2 + (g.y[i] - y) ** 2; if (d < best) { best = d; bi = i; } }
     }
     if (bi >= 0 && Math.sqrt(best) < r * g.B) break;
   }
@@ -324,6 +360,7 @@ function placeName(x, y) {
 // the road a junction sits on: the arc it leaves by, if named, else the biggest named road through it
 const roadAt = (i, a = -1) => (a >= 0 && G.en[a >> 1]) ? G.names[G.en[a >> 1]] : G.names[G.nodeName[i]] || "";
 const parishOf = (i) => G.parishes[G.parish[i]];
+const nodeAt = (p) => nearestNode(G, p.x, p.y, 3);
 function fold(s) { return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[’']/g, "'"); }
 
 // ---------- routing ----------
@@ -337,22 +374,21 @@ class Heap {
   }
 }
 // reverse = true: cost from every node TO the sources; false: FROM the sources
-function dijkstra(sources, { reverse = true, mode = M() } = {}) {
-  const g = G, n = g.n;
+function dijkstra(sources, { reverse = true, mode = M(), travel = T() } = {}) {
+  const g = G, n = g.n, nt = net(travel), cost = arcCost(travel, mode);
   const dist = new Float64Array(n).fill(Infinity), arc = new Int32Array(n).fill(-1), lab = new Int16Array(n).fill(-1);
   const order = new Int32Array(n); let cnt = 0;
   const done = new Uint8Array(n);
-  const h = new Heap(g.outArc.length + sources.length + 4);
+  const h = new Heap(nt.outArc.length + sources.length + 4);
   sources.forEach((s, i) => { if (s >= 0 && dist[s] > 0) { dist[s] = 0; lab[s] = i; h.push(0, s); } });
-  const cost = mode === "dist" ? g.ek : mode === "slow" ? g.es : g.et;
-  const off = reverse ? g.inOff : g.outOff, list = reverse ? g.inArc : g.outArc;
+  const off = reverse ? nt.inOff : nt.outOff, list = reverse ? nt.inArc : nt.outArc;
   while (h.s) {
     const u = h.pop(); if (done[u]) continue; done[u] = 1; order[cnt++] = u;
     const du = dist[u];
     for (let j = off[u]; j < off[u + 1]; j++) {
-      const a = list[j], e = a >> 1;
+      const a = list[j];
       const w = reverse ? g.from(a) : g.to(a);
-      const nd = du + cost[e];
+      const nd = du + cost[a];
       if (nd < dist[w]) { dist[w] = nd; arc[w] = a; lab[w] = lab[u]; h.push(nd, w); }
     }
   }
@@ -387,7 +423,7 @@ function drawLand() {
   ctx.beginPath(); for (const [, ring] of G.outline) ringPath(ctx, ring); ctx.stroke();
   // every road, faintly, under the routes
   ctx.strokeStyle = css("--net"); ctx.lineWidth = 0.7; ctx.lineCap = "round"; ctx.lineJoin = "round";
-  ctx.beginPath(); for (let e = 0; e < G.m; e++) tracePath(ctx, e * 2); ctx.stroke();
+  ctx.beginPath(); for (let e = 0; e < G.m; e++) if (usable(e)) tracePath(ctx, e * 2); ctx.stroke();
 }
 function drawParishLines() {
   ctx.save(); ctx.globalAlpha = 0.7; ctx.strokeStyle = css("--ink"); ctx.lineWidth = 1.1;
@@ -404,7 +440,7 @@ function tracePath(c, a, first = true) {
   if (rev) pts.reverse();
   pts.forEach(([x, y], i) => (i === 0 && first) ? c.moveTo(view.px(x), view.py(y)) : c.lineTo(view.px(x), view.py(y)));
 }
-const classColor = () => [css("--a-road"), css("--b-road"), css("--road"), css("--green-lane")];
+const classColor = () => [css("--a-road"), css("--b-road"), css("--road"), css("--green-lane"), css("--path")];
 function widthFor(f, total) { return Math.max(0.5, 0.5 + view.W / 58 * Math.pow(f / total, 0.55)); }
 // draw a tree: flow[i] is the load on node i's outgoing tree arc
 function drawTree(t, flow, total, colorOf) {
@@ -454,7 +490,7 @@ const pal = (i) => (matchDark() ? PALETTE_DARK : PALETTE)[i % PALETTE.length];
 
 // ---------- weights ----------
 function weights(scopeFn) {
-  const w = S.weight === "pop" ? G.pop : G.area;
+  const w = (S.weight === "pop" ? G.pop : G.area)[T()];
   const out = new Float64Array(G.n);
   for (let i = 0; i < G.n; i++) if (!scopeFn || scopeFn(i)) out[i] = w[i];
   return out;
@@ -482,16 +518,21 @@ function render() {
   drawLand();
   hx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0); hx.clearRect(0, 0, view.W, view.H);
   $("#tip").hidden = true;
+  S.dest = nearestNode(G, S.destXY[0], S.destXY[1], 3);
+  for (const p of S.picks) p.node = nodeAt(p);
+  for (const p of S.travellers) p.node = nodeAt(p);
   syncTravellers();
   ({ one: renderOne, sheds: renderSheds, meet: renderMeet, slow: renderSlow })[S.kind]();
-  $("#timing").textContent = `Routed and drawn in ${Math.round(performance.now() - t0)} ms · ${G.n.toLocaleString("en-GB")} junctions · ${G.roads.length.toLocaleString("en-GB")} named roads`;
+  $("#timing").textContent = `Routed and drawn in ${Math.round(performance.now() - t0)} ms · ${G.count[T()].toLocaleString("en-GB")} junctions ${{ car: "by car", bike: "by bike", foot: "on foot" }[T()]}`;
 }
 function scopeFor(t) {
   if (S.scope === "parish") { const p = G.parish[S.dest]; return (i) => G.parish[i] === p; }
-  if (S.scope === "near") { const lim = M() === "dist" ? S.near * 0.4 * 1.609344 : S.near; return (i) => t.dist[i] <= lim; }
+  if (S.scope === "near") { const lim = M() === "dist" ? S.near * 0.4 * 1.609344 : S.near * NEAR_FACTOR[T()]; return (i) => t.dist[i] <= lim; }
   return null;
 }
-const nearText = () => M() === "dist" ? fmtMi(S.near * 0.4) : S.near + " min";
+const nearText = () => M() === "dist" ? fmtMi(S.near * 0.4) : fmtT(S.near * NEAR_FACTOR[T()]);
+// "By bike, all roads lead to": the title's lead, saying how the routes travel
+const lead = (text) => T() === "car" ? text : `${T() === "bike" ? "By bike" : "On foot"}, ${text[0].toLowerCase()}${text.slice(1)}`;
 const scopeText = () => S.scope === "parish" ? `of ${parishOf(S.dest)}` : S.scope === "near" ? `within ${nearText()}` : "in Jersey";
 
 let current = null; // what the hover tooltip reads
@@ -504,7 +545,7 @@ function renderOne() {
   const { med, tot } = median(t, w);
   let far = -1; for (let i = 0; i < G.n; i++) if (w[i] > 0 && isFinite(t.dist[i]) && (far < 0 || t.dist[i] > t.dist[far])) far = i;
   current = { t };
-  title(M() === "dist" ? "Shortest routes to" : "All roads lead to", S.destName,
+  title(lead(M() === "dist" ? "Shortest routes to" : "All roads lead to"), S.destName,
     `Half of the ${unitWord()} ${scopeText()} ${isAre()} within <b>${fmtC(med)}</b>.` +
     (far >= 0 ? `<br>Farthest start: ${esc(placeName(G.x[far], G.y[far]))}, <b>${fmtC(t.dist[far])}</b>.` : "") +
     `<br>${counted(tot)}`);
@@ -520,8 +561,8 @@ function renderSlow() {
   marker(ctx, G.x[S.dest], G.y[S.dest], 6, css("--route-no"), "");
   let acc = 0, tot = 0;
   for (let i = 0; i < G.n; i++) if (w[i] > 0 && isFinite(t2.dist[i])) { acc += w[i] * (t2.dist[i] - t.dist[i]); tot += w[i]; }
-  const towns = G.villages.filter((p) => p.node !== S.dest && (!sc || sc(p.node)))
-    .map((p) => ({ p, d: t2.dist[p.node] - t.dist[p.node] })).filter((r) => r.d >= 0.5).sort((a, b) => b.d - a.d).slice(0, 3);
+  const towns = G.villages.map((p) => ({ p, node: nodeAt(p) })).filter((r) => r.node !== S.dest && (!sc || sc(r.node)))
+    .map(({ p, node }) => ({ p, d: t2.dist[node] - t.dist[node] })).filter((r) => r.d >= 0.5).sort((a, b) => b.d - a.d).slice(0, 3);
   const { med } = median(t, w), { med: med2 } = median(t2, w);
   current = { t: t2, t1: t, slow: true };
   title(`At ${G.slow} mph, all roads lead to`, S.destName,
@@ -533,13 +574,13 @@ function renderSlow() {
     `<div class="row" style="margin-top:6px;color:var(--muted)">Lines show the quickest routes with every limit above ${G.slow} mph cut to ${G.slow}. Roads already at ${G.slow} mph or less don't change.</div>`;
 }
 function seedList() {
-  if (S.seeds === "churches") return G.churches.map((c) => ({ name: G.parishes[c.parish], node: c.node, parish: c.parish }));
+  if (S.seeds === "churches") return G.churches.map((c) => ({ name: G.parishes[c.parish], x: c.x, y: c.y, node: nodeAt(c), parish: c.parish }));
   if (S.seeds === "picks") return S.picks;
-  return G.villages.slice(0, S.nbig).map((p) => ({ name: p.name, node: p.node }));
+  return G.villages.slice(0, S.nbig).map((p) => ({ name: p.name, x: p.x, y: p.y, node: nodeAt(p) }));
 }
 function renderSheds() {
   const seeds = seedList();
-  if (!seeds.length) { title("Road watersheds of", "your picks", "Click the map to add places."); $("#legend").innerHTML = ""; current = null; return; }
+  if (!seeds.length) { title(lead("Watersheds of"), "your picks", "Click the map to add places."); $("#legend").innerHTML = ""; current = null; return; }
   const t = dijkstra(seeds.map((s) => s.node));
   const w = weights(null), f = accumulate(t, w);
   const sum = new Float64Array(seeds.length); let tot = 0, own = 0;
@@ -564,10 +605,10 @@ function renderSheds() {
   current = { t, seeds };
   const rank = seeds.map((s, i) => ({ s, i, v: sum[i] })).sort((a, b) => b.v - a.v);
   const top = rank[0];
-  title(M() === "dist" ? "Shortest-distance road watersheds of" : "Road watersheds of",
+  title(lead(M() === "dist" ? "Shortest-distance watersheds of" : T() === "car" ? "Road watersheds of" : "Watersheds of"),
     churches ? "the parish churches" : S.seeds === "picks" ? `${seeds.length} chosen ${seeds.length === 1 ? "place" : "places"}` : `${seeds.length} towns and villages`,
     `${esc(top.s.name)} drains <b>${Math.round(100 * top.v / tot)}%</b> of the ${unitWord()}.` +
-    (churches ? `<br><b>${Math.round(100 * own / tot)}%</b> of the ${unitWord()} ${isAre()} closer by road to its own parish church than to any other.` : ""));
+    (churches ? `<br><b>${Math.round(100 * own / tot)}%</b> of the ${unitWord()} ${isAre()} closer ${{ car: "by road", bike: "by bike", foot: "on foot" }[T()]} to its own parish church than to any other.` : ""));
   $("#legend").innerHTML = `<div class="label">Basins by ${S.weight === "pop" ? "people" : "land"}</div><div class="cols">` +
     rank.slice(0, 20).map((r) => `<div class="row basin"><span class="dot" style="background:${bc(r.i)}"></span>${esc(r.s.name)} · ${Math.round(100 * r.v / tot)}%</div>`).join("") + `</div>` +
     (churches ? `<div class="row" style="margin-top:6px;color:var(--muted)">Dark lines: the real parish boundaries.</div>` : "");
@@ -589,7 +630,7 @@ function renderMeet() {
     const v = S.fair === "max" ? mx + sm * 1e-4 : sm;
     score[i] = v; if (v < bestV) { bestV = v; best = i; }
   }
-  if (best < 0) { title("Meet up", "no shared road", "These travellers can't all reach one place by road. Remove one and try again."); L.innerHTML = ""; current = null; return; }
+  if (best < 0) { title("Meet up", "nowhere shared", "These travellers can't all reach one place. Remove one and try again."); L.innerHTML = ""; current = null; return; }
   // faint field of how fair each junction is
   const fin = Array.from(score).filter(isFinite).sort((a, b) => a - b);
   const lo = fin[0], hi = fin[Math.floor(fin.length * 0.9)];
@@ -614,10 +655,10 @@ function renderMeet() {
   marker(ctx, G.x[best], G.y[best], 8, css("--route-no"), "");
   current = { meet: trees, best };
   const where = placeName(G.x[best], G.y[best]), road = roadAt(best);
-  title(S.fair === "max" ? "The fairest place to meet is" : "Least total driving: meet", where,
+  title(lead(S.fair === "max" ? "The fairest place to meet is" : "Least total travel: meet"), where,
     (road ? `On ${esc(road)}, ${esc(parishOf(best))}.<br>` : "") +
     tr.map((p, i) => `${esc(p.name)}: <b>${fmtC(trees[i].dist[best])}</b>`).join(tr.length > 4 ? " · " : "<br>"));
-  L.innerHTML = `<div class="label">Every junction, by ${S.fair === "max" ? "longest drive" : "total driving"}</div>` +
+  L.innerHTML = `<div class="label">Every junction, by ${S.fair === "max" ? "longest journey" : "total travel"}</div>` +
     `<div class="row"><span class="sw" style="background:hsl(140 55% 50%)"></span>Fairest</div><div class="row"><span class="sw" style="background:hsl(0 55% 50%)"></span>Least fair</div>`;
 }
 function title(lead, name, facts) {
@@ -626,8 +667,8 @@ function title(lead, name, facts) {
 function legendRoads() {
   const c = classColor();
   $("#legend").innerHTML = `<div class="label">Road class</div>` +
-    [["A road", c[0]], ["B road", c[1]], ["Other road", c[2]], ["Green lane (15 mph)", c[3]]].map(([n, col]) => `<div class="row"><span class="sw" style="background:${col}"></span>${n}</div>`).join("") +
-    `<div class="row" style="margin-top:6px;color:var(--muted)">Line width shows the ${S.weight === "pop" ? "people" : "land area"} whose route uses the road. Hover over the map for any single route.</div>`;
+    [["A road", c[0]], ["B road", c[1]], ["Other road", c[2]], ["Green lane (15 mph)", c[3]]].concat(T() === "car" ? [] : [[T() === "bike" ? "Path or cycleway" : "Path, cycleway or steps", c[4]]]).map(([n, col]) => `<div class="row"><span class="sw" style="background:${col}"></span>${n}</div>`).join("") +
+    `<div class="row" style="margin-top:6px;color:var(--muted)">Line width shows the ${S.weight === "pop" ? "people" : "land area"} whose route uses the ${T() === "car" ? "road" : "way"}. Hover over the map for any single route.</div>`;
 }
 
 // ---------- hover ----------
@@ -681,22 +722,22 @@ function onClick(ev) {
   const nm = nameFor(i);
   if (S.kind === "sheds") {
     if (S.seeds !== "picks") { S.picks = seedList().slice(); S.seeds = "picks"; syncChips(); setHash(); }
-    const k = S.picks.findIndex((p) => Math.hypot(G.x[p.node] - x, G.y[p.node] - y) < 0.4);
-    if (k >= 0) S.picks.splice(k, 1); else if (S.picks.length < 24) S.picks.push({ name: nm, node: i });
+    const k = S.picks.findIndex((p) => Math.hypot(p.x - x, p.y - y) < 0.4);
+    if (k >= 0) S.picks.splice(k, 1); else if (S.picks.length < 24) S.picks.push({ name: nm, x: G.x[i], y: G.y[i], node: i });
   } else if (S.kind === "meet") {
-    const k = S.travellers.findIndex((p) => Math.hypot(G.x[p.node] - x, G.y[p.node] - y) < 0.4);
-    if (k >= 0) S.travellers.splice(k, 1); else if (S.travellers.length < 12) S.travellers.push({ name: nm, node: i });
+    const k = S.travellers.findIndex((p) => Math.hypot(p.x - x, p.y - y) < 0.4);
+    if (k >= 0) S.travellers.splice(k, 1); else if (S.travellers.length < 12) S.travellers.push({ name: nm, x: G.x[i], y: G.y[i], node: i });
     syncTravellers();
   } else {
-    setDest(i, nm);
+    setDest(G.x[i], G.y[i], nm);
   }
   render();
 }
 
 // ---------- controls ----------
 function slug(s) { return fold(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
-function setDest(node, name, hash = true) {
-  S.dest = node; S.destName = name; $("#dest").value = "";
+function setDest(x, y, name, hash = true) {
+  S.destXY = [x, y]; S.dest = nearestNode(G, x, y, 3); S.destName = name; $("#dest").value = "";
   $("#dest").placeholder = name;
   if (hash) setHash();
   syncChips();
@@ -704,10 +745,10 @@ function setDest(node, name, hash = true) {
 function setHash() {
   const d = slug(S.destName.replace(/^near /, ""));
   const h = S.kind === "sheds" ? (S.seeds === "villages" ? "villages" : "watersheds") : S.kind === "meet" ? "meet-up" : S.kind === "slow" ? "20-mph-" + d : d;
-  try { history.replaceState(null, "", "#" + h); } catch (e) {}
+  try { history.replaceState(null, "", "#" + h + (T() === "car" ? "" : "/" + T())); } catch (e) {}
 }
 function syncChips() {
-  for (const [id, key] of [["kind", "kind"], ["mode", "mode"], ["scope", "scope"], ["weight", "weight"], ["seeds", "seeds"], ["fair", "fair"]])
+  for (const [id, key] of [["kind", "kind"], ["travel", "travel"], ["mode", "mode"], ["scope", "scope"], ["weight", "weight"], ["seeds", "seeds"], ["fair", "fair"]])
     for (const b of document.querySelectorAll(`#${id} button`)) b.setAttribute("aria-pressed", String(b.dataset.v === S[key]));
   for (const b of document.querySelectorAll("#quick button")) b.setAttribute("aria-pressed", String(b.dataset.v === S.destName));
   for (const grp of document.querySelectorAll("[data-for]")) grp.hidden = !grp.dataset.for.split(" ").includes(S.kind);
@@ -738,14 +779,14 @@ function initControls() {
     if (S.kind === "meet" && !S.travellers.length) loadPreset("corners");
     setHash();
   });
-  bindChips("mode", "mode"); bindChips("scope", "scope"); bindChips("weight", "weight"); bindChips("seeds", "seeds", setHash); bindChips("fair", "fair");
+  bindChips("travel", "travel", setHash); bindChips("mode", "mode"); bindChips("scope", "scope"); bindChips("weight", "weight"); bindChips("seeds", "seeds", setHash); bindChips("fair", "fair");
   $("#quick").innerHTML = QUICK.map(([n, label]) => findName(n) ? `<button type="button" data-v="${esc(n)}">${esc(label)}</button>` : "").join("");
-  $("#quick").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; const p = findName(b.dataset.v); setDest(p.node, p.name); render(); });
-  const inp = $("#dest"), M = $("#matches");
+  $("#quick").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; const p = findName(b.dataset.v); setDest(p.x, p.y, p.name); render(); });
+  const inp = $("#dest"), MT = $("#matches");
   let hits = [];
   inp.addEventListener("input", () => {
     const q = fold(inp.value.trim());
-    if (q.length < 2) { M.hidden = true; return; }
+    if (q.length < 2) { MT.hidden = true; return; }
     const seen = new Set(); const scored = [];
     for (const s of G.search) {
       const at = s.key.indexOf(q);
@@ -755,13 +796,13 @@ function initControls() {
     }
     scored.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
     hits = scored.slice(0, 8).map((r) => r[3]);
-    M.innerHTML = hits.map((s, k) => `<button type="button" role="option" data-k="${k}">${esc(s.name)}<span>${esc(s.kind)}</span></button>`).join("");
-    M.hidden = !hits.length;
+    MT.innerHTML = hits.map((s, k) => `<button type="button" role="option" data-k="${k}">${esc(s.name)}<span>${esc(s.kind)}</span></button>`).join("");
+    MT.hidden = !hits.length;
   });
-  inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { const b = M.querySelector("button"); if (b && !M.hidden) b.click(); } });
-  M.addEventListener("click", (e) => {
+  inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { const b = MT.querySelector("button"); if (b && !MT.hidden) b.click(); } });
+  MT.addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b) return;
-    const s = hits[+b.dataset.k]; setDest(s.node, s.name); M.hidden = true; render();
+    const s = hits[+b.dataset.k]; setDest(s.x, s.y, s.name); MT.hidden = true; render();
   });
   $("#nbig").max = G.villages.length;
   $("#nbig").addEventListener("input", (e) => { S.nbig = +e.target.value; $("#nbig-out").textContent = S.nbig; render(); });
@@ -777,23 +818,27 @@ function initControls() {
 }
 function loadPreset(k) {
   if (k === "clear") S.travellers = [];
-  else if (k === "churches") S.travellers = G.churches.map((c) => ({ name: G.parishes[c.parish], node: c.node }));
-  else S.travellers = PRESETS[k].map(([name, lon, lat]) => { const [x, y] = ll(lon, lat); return { name, node: nearestNode(G, x, y) }; });
+  else if (k === "churches") S.travellers = G.churches.map((c) => ({ name: G.parishes[c.parish], x: c.x, y: c.y }));
+  else S.travellers = PRESETS[k].map(([name, lon, lat]) => { const [x, y] = ll(lon, lat); return { name, x, y }; });
+  for (const p of S.travellers) p.node = nodeAt(p);
   syncTravellers();
 }
 function fromHash() {
   let h = decodeURIComponent(location.hash.slice(1));
+  const m = h.match(/\/(car|bike|foot)$/);
+  S.travel = m ? m[1] : "car";
+  if (m) h = h.slice(0, m.index);
   if (h === "watersheds") { S.kind = "sheds"; S.seeds = "churches"; return; }
   if (h === "villages") { S.kind = "sheds"; S.seeds = "villages"; return; }
   if (h === "meet-up") { S.kind = "meet"; loadPreset("corners"); return; }
   if (h.startsWith("20-mph")) { S.kind = "slow"; h = h.slice(7); if (!h) return; }
-  if (h) { const s = G.search.find((s) => slug(s.name) === h); if (s) setDest(s.node, s.name, false); }
+  if (h) { const s = G.search.find((s) => slug(s.name) === h); if (s) setDest(s.x, s.y, s.name, false); }
 }
 
 (async () => {
   try { G = await load(); } catch (e) { $("#loading").textContent = "The road data didn't load. Reload the page to try again."; return; }
   $("#loading").hidden = true;
-  const home = findName("St Helier"); setDest(home.node, home.name, false);
+  const home = findName("St Helier"); setDest(home.x, home.y, home.name, false);
   fromHash();
   initControls(); syncChips(); layout(); render();
   addEventListener("hashchange", () => { S.kind = "one"; S.seeds = "churches"; fromHash(); syncChips(); render(); });

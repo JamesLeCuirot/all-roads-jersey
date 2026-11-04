@@ -38,6 +38,7 @@
   --green-lane: #2e8540;
   --path: #7a5ab8;
   --route-no: #f6c90e;
+  --closed: #e0182d;
   --font-display: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
   --font-body: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
   --font-data: "JetBrains Mono", ui-monospace, Menlo, monospace;
@@ -117,6 +118,8 @@ input[type="search"] {
 .loading { position: absolute; inset: 0; min-height: 200px; display: grid; place-items: center; font-family: var(--font-data); font-size: 13px; color: var(--muted); }
 .tag { display: inline-flex; gap: 4px; align-items: center; font-size: 12.5px; border: 1px solid var(--line); border-radius: 3px; padding: 2px 4px 2px 8px; }
 .tag button { border: 0; background: none; color: var(--muted); cursor: pointer; font: inherit; padding: 0 4px; }
+.tag .no-entry { width: 10px; height: 10px; border-radius: 50%; background: var(--closed); flex: none; position: relative; }
+.tag .no-entry::after { content: ""; position: absolute; left: 2px; right: 2px; top: 4px; height: 2px; background: #fff; }
 .matches { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
 .matches button { display: flex; justify-content: space-between; gap: 8px; text-align: left; font: inherit; font-size: 14px; padding: 6px 10px; border: 0; background: var(--land); color: var(--ink); cursor: pointer; }
 .matches button span { color: var(--muted); font-size: 12px; white-space: nowrap; }
@@ -143,6 +146,7 @@ input[type="search"] {
         <button type="button" data-v="sheds" aria-pressed="false">Watersheds</button>
         <button type="button" data-v="meet" aria-pressed="false">Meet up</button>
         <button type="button" data-v="slow" aria-pressed="false">20 mph island</button>
+        <button type="button" data-v="closed" aria-pressed="false">Road closures</button>
       </div>
     </div>
 
@@ -155,12 +159,19 @@ input[type="search"] {
       </div>
     </div>
 
-    <div class="group" data-for="one slow">
+    <div class="group" data-for="closed">
+      <span class="label" id="l-closed">Closed roads</span>
+      <div class="chips" id="closedlist" role="group" aria-labelledby="l-closed"></div>
+      <p class="hint" id="closedhint">Click any road on the map to close it, and click it again to reopen it. The map shows the detours by car, and colours each route by the minutes the closures add.</p>
+      <div class="chips"><button type="button" id="reopen" hidden>Reopen all</button></div>
+    </div>
+
+    <div class="group" data-for="one slow closed">
       <label class="label" for="dest">Destination</label>
       <input type="search" id="dest" placeholder="Search a place, road or beach" autocomplete="off" aria-controls="matches">
       <div class="matches" id="matches" role="listbox" hidden></div>
       <div class="chips" id="quick"></div>
-      <p class="hint">Or click anywhere on the map to send every route there.</p>
+      <p class="hint" data-for="one slow">Or click anywhere on the map to send every route there.</p>
     </div>
 
     <div class="group" data-for="sheds">
@@ -198,7 +209,7 @@ input[type="search"] {
       </div>
     </div>
 
-    <div class="group" data-for="one slow">
+    <div class="group" data-for="one slow closed">
       <span class="label" id="l-scope">Start routes from</span>
       <div class="chips ink" role="group" aria-labelledby="l-scope" id="scope">
         <button type="button" data-v="all" aria-pressed="true">Whole island</button>
@@ -208,7 +219,7 @@ input[type="search"] {
       <div class="range" id="near-wrap" hidden><input type="range" id="near" min="2" max="20" step="1" value="8" aria-label="How far away"><output id="near-out">8 min</output></div>
     </div>
 
-    <div class="group" data-for="one sheds slow">
+    <div class="group" data-for="one sheds slow closed">
       <span class="label" id="l-weight">Line width shows</span>
       <div class="chips ink" role="group" aria-labelledby="l-weight" id="weight">
         <button type="button" data-v="area" aria-pressed="true">Land area</button>
@@ -232,7 +243,7 @@ input[type="search"] {
     </div>
     <p class="footnote" id="footnote">
       <span id="timing"></span><br>
-      Roads and paths: OpenStreetMap (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL), each used only by those allowed on it; driveways, car parks and private roads are left out. By car: every road a car can use, A roads up to 34 mph, B roads 27, C roads 25, other lanes 23, estate roads 18, green lanes 12, each capped at 85% of the posted limit, plus 3 seconds for every junction passed; one-way streets respected; no traffic, lights or queues for the tunnel. The 20 mph island cuts every higher limit to 20 mph, at the same 85%. By bike: 16 km/h on the flat (11 on rough tracks), slower uphill and up to 30 km/h down, plus 2 seconds a junction; bikes are pushed along footways and pedestrian streets and kept off steps; one-way streets respected unless bikes are let through. On foot: Tobler's hiking pace, 5 km/h on the flat, on every road, path and set of steps. Heights: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Mapzen terrain tiles</a> (EU-DEM, produced using Copernicus data and information funded by the European Union, and SRTM). People: each parish's 2021 census population (Statistics Jersey) spread over its homes by floor area, from OpenStreetMap buildings. Land: 50 m squares, each given to its nearest junction.
+      Roads and paths: OpenStreetMap (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL), each used only by those allowed on it; driveways, car parks and private roads are left out. By car: every road a car can use, A roads up to 34 mph, B roads 27, C roads 25, other lanes 23, estate roads 18, green lanes 12, each capped at 85% of the posted limit, plus 3 seconds for every junction passed; one-way streets respected; no traffic, lights or queues for the tunnel. The 20 mph island cuts every higher limit to 20 mph, at the same 85%. Road closures shut a stretch of road between two junctions, both ways, for cars. By bike: 16 km/h on the flat (11 on rough tracks), slower uphill and up to 30 km/h down, plus 2 seconds a junction; bikes are pushed along footways and pedestrian streets and kept off steps; one-way streets respected unless bikes are let through. On foot: Tobler's hiking pace, 5 km/h on the flat, on every road, path and set of steps. Heights: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Mapzen terrain tiles</a> (EU-DEM, produced using Copernicus data and information funded by the European Union, and SRTM). People: each parish's 2021 census population (Statistics Jersey) spread over its homes by floor area, from OpenStreetMap buildings. Land: 50 m squares, each given to its nearest junction.
       Adapted from Doug Belshaw's <a href="https://roads.dougbelshaw.com" target="_blank" rel="noopener">All Roads Lead To (UK)</a>, after Ethan Mollick's <a href="https://all-roads-lead-to.netlify.app/" target="_blank" rel="noopener">US version</a> and “All Roads Lead to Richmond” by <a href="https://arterialmapping.wordpress.com/2022/03/20/all-roads-lead-to-richmond-2/" target="_blank" rel="noopener">Arterial Mapping</a>. <a href="https://github.com/JamesLeCuirot/all-roads-jersey" target="_blank" rel="noopener">Source code</a> (GPL-3.0).
     </p>
   </main>
@@ -246,10 +257,11 @@ const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v
 const BASE = /\/$|\.html?$/.test(location.pathname) ? "" : location.pathname.replace(/^.*\//, "") + "/";
 
 const S = { kind: "one", dest: null, destXY: null, destName: "", mode: "time", travel: "car", scope: "all", near: 8, weight: "area",
-  seeds: "churches", nbig: 8, picks: [], travellers: [], fair: "max" };
+  seeds: "churches", nbig: 8, picks: [], travellers: [], fair: "max", closed: [] };
 let G = null; // graph
-const M = () => S.kind === "slow" ? "time" : S.mode; // the 20 mph map only compares times
-const T = () => S.kind === "slow" ? "car" : S.travel; // ... by car
+const CAR_ONLY = new Set(["slow", "closed"]); // maps that compare car times only
+const M = () => CAR_ONLY.has(S.kind) ? "time" : S.mode;
+const T = () => CAR_ONLY.has(S.kind) ? "car" : S.travel;
 const TRAVEL = { car: 0, bike: 1, foot: 2 };
 const NEAR_FACTOR = { car: 1, bike: 3, foot: 9 }; // the Nearby slider's minutes, by way of travelling
 
@@ -374,7 +386,7 @@ class Heap {
   }
 }
 // reverse = true: cost from every node TO the sources; false: FROM the sources
-function dijkstra(sources, { reverse = true, mode = M(), travel = T() } = {}) {
+function dijkstra(sources, { reverse = true, mode = M(), travel = T(), closed = null } = {}) {
   const g = G, n = g.n, nt = net(travel), cost = arcCost(travel, mode);
   const dist = new Float64Array(n).fill(Infinity), arc = new Int32Array(n).fill(-1), lab = new Int16Array(n).fill(-1);
   const order = new Int32Array(n); let cnt = 0;
@@ -387,6 +399,7 @@ function dijkstra(sources, { reverse = true, mode = M(), travel = T() } = {}) {
     const du = dist[u];
     for (let j = off[u]; j < off[u + 1]; j++) {
       const a = list[j];
+      if (closed && closed[a >> 1]) continue;
       const w = reverse ? g.from(a) : g.to(a);
       const nd = du + cost[a];
       if (nd < dist[w]) { dist[w] = nd; arc[w] = a; lab[w] = lab[u]; h.push(nd, w); }
@@ -428,6 +441,50 @@ function drawLand() {
 function drawParishLines() {
   ctx.save(); ctx.globalAlpha = 0.7; ctx.strokeStyle = css("--ink"); ctx.lineWidth = 1.1;
   ctx.beginPath(); for (const [, ring] of G.outline) ringPath(ctx, ring); ctx.stroke(); ctx.restore();
+}
+// an edge's points, u to v, in km
+function edgePts(e) {
+  const g = G, q = g.q, u = g.eu[e], v = g.ev[e];
+  const pts = [[g.x[u], g.y[u]]];
+  let px = Math.round(g.x[u] * q), py = Math.round(g.y[u] * q);
+  for (let k = g.go[e]; k < g.go[e + 1]; k++) { px += g.gp[2 * k]; py += g.gp[2 * k + 1]; pts.push([px / q, py / q]); }
+  pts.push([g.x[v], g.y[v]]);
+  return pts;
+}
+// the car road nearest a point, and the nearest point on it: { e, x, y, d } (km), or null beyond maxKm
+let edgeBins = null;
+function nearestCarEdge(x, y, maxKm, ok = null) {
+  const B = 0.25;
+  if (!edgeBins) {
+    edgeBins = new Map();
+    for (let e = 0; e < G.m; e++) {
+      if (!usable(e, "car")) continue;
+      const pts = edgePts(e), seen = new Set();
+      for (let k = 0; k < pts.length; k++) {
+        const [x1, y1] = pts[k], [x2, y2] = pts[Math.min(k + 1, pts.length - 1)];
+        const n = Math.max(1, Math.ceil(Math.hypot(x2 - x1, y2 - y1) / (B / 2)));
+        for (let j = 0; j <= n; j++) {
+          const key = Math.floor((x1 + (x2 - x1) * j / n) / B) + "," + Math.floor((y1 + (y2 - y1) * j / n) / B);
+          if (seen.has(key)) continue; seen.add(key);
+          let b = edgeBins.get(key); if (!b) edgeBins.set(key, b = []); b.push(e);
+        }
+      }
+    }
+  }
+  const r = Math.ceil(maxKm / B), bx = Math.floor(x / B), by = Math.floor(y / B), tried = new Set();
+  let best = null;
+  for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) for (const e of edgeBins.get((bx + dx) + "," + (by + dy)) || []) {
+    if (tried.has(e)) continue; tried.add(e);
+    const pts = edgePts(e);
+    for (let k = 0; k < pts.length - 1; k++) {
+      const [x1, y1] = pts[k], [x2, y2] = pts[k + 1], L2 = (x2 - x1) ** 2 + (y2 - y1) ** 2 || 1e-12;
+      const s = Math.max(0, Math.min(1, ((x - x1) * (x2 - x1) + (y - y1) * (y2 - y1)) / L2));
+      const px = x1 + s * (x2 - x1), py = y1 + s * (y2 - y1), d = Math.hypot(x - px, y - py);
+      const dx = (x2 - x1) / Math.sqrt(L2), dy = (y2 - y1) / Math.sqrt(L2);
+      if (d <= maxKm && (!best || d < best.d) && (!ok || ok(e, dx, dy))) best = { e, x: px, y: py, d, dx, dy };
+    }
+  }
+  return best;
 }
 // trace an edge's geometry in the direction of arc a
 function tracePath(c, a, first = true) {
@@ -522,7 +579,7 @@ function render() {
   for (const p of S.picks) p.node = nodeAt(p);
   for (const p of S.travellers) p.node = nodeAt(p);
   syncTravellers();
-  ({ one: renderOne, sheds: renderSheds, meet: renderMeet, slow: renderSlow })[S.kind]();
+  ({ one: renderOne, sheds: renderSheds, meet: renderMeet, slow: renderSlow, closed: renderClosed })[S.kind]();
   $("#timing").textContent = `Routed and drawn in ${Math.round(performance.now() - t0)} ms · ${G.count[T()].toLocaleString("en-GB")} junctions ${{ car: "by car", bike: "by bike", foot: "on foot" }[T()]}`;
 }
 function scopeFor(t) {
@@ -572,6 +629,89 @@ function renderSlow() {
   $("#legend").innerHTML = `<div class="label">Time today's limits save</div>` +
     steps.map((m, k) => `<div class="row"><span class="sw" style="background:${ramp(m)}"></span>${m} min${k === steps.length - 1 ? " or more" : ""}</div>`).join("") +
     `<div class="row" style="margin-top:6px;color:var(--muted)">Lines show the quickest routes with every limit above ${G.slow} mph cut to ${G.slow}. Roads already at ${G.slow} mph or less don't change.</div>`;
+}
+// the closed stretches as edges: each closure is kept as a point on its road, so links survive a rebuild
+function closedEdges() {
+  const mask = new Uint8Array(G.m);
+  for (const c of S.closed) {
+    for (const q of c.pts) { const hit = nearestCarEdge(q.x, q.y, 0.05); q.e = hit ? hit.e : -1; if (hit) mask[hit.e] = 1; }
+    c.e = c.pts[0].e; c.x = c.pts[0].x; c.y = c.pts[0].y;
+  }
+  return mask;
+}
+const baseName = (e) => (G.names[G.en[e]] || "").replace(/ \([^)]*\)$/, "");
+// which way a car drives along an edge: 1 with its geometry, -1 against, 0 both ways
+const carWay = (e) => { const f = G.ea[e] & 1, b = G.ea[e] & 2; return f && b ? 0 : f ? 1 : -1; };
+// close the stretch nearest a click and, on a dual carriageway, the other carriageway beside it:
+// the same road, one-way the opposite way, within 60 m
+function closureAt(x, y, maxKm) {
+  const hit = nearestCarEdge(x, y, maxKm); if (!hit) return null;
+  const pts = [{ x: hit.x, y: hit.y, e: hit.e }], nm = baseName(hit.e), way = carWay(hit.e);
+  if (nm && way) {
+    const twin = nearestCarEdge(hit.x, hit.y, 0.06, (e, dx, dy) =>
+      e !== hit.e && carWay(e) !== 0 && baseName(e) === nm && (dx * hit.dx + dy * hit.dy) * carWay(e) * way < -0.5);
+    if (twin) pts.push({ x: twin.x, y: twin.y, e: twin.e });
+  }
+  return { pts, e: hit.e, x: hit.x, y: hit.y };
+}
+function renderClosed() {
+  const closed = closedEdges(), n = S.closed.filter((c) => c.e >= 0).length;
+  const shut = S.closed.flatMap((c) => c.pts).filter((q) => q.e >= 0);
+  const t = dijkstra([S.dest]), t2 = dijkstra([S.dest], { closed });
+  const sc = scopeFor(t), w = weights(sc), f = accumulate(t2, w);
+  const top = 5;
+  const ramp = (d) => { const k = Math.min(1, Math.max(0, d) / top); return `hsl(${210 - k * 210} 70% ${matchDark() ? 60 : 45}%)`; };
+  drawTree(t2, f, f[S.dest] || 1, (i) => ramp(t2.dist[i] - t.dist[i]));
+  // junctions the closures cut off from the destination
+  let acc = 0, tot = 0, cut = 0, worst = -1;
+  ctx.fillStyle = css("--closed");
+  for (let i = 0; i < G.n; i++) {
+    if (!isFinite(t.dist[i]) || !(G.mask[i] & 1)) continue;
+    if (!isFinite(t2.dist[i])) {
+      cut += w[i];
+      if (!sc || sc(i)) { ctx.beginPath(); ctx.arc(view.px(G.x[i]), view.py(G.y[i]), 2.5, 0, 7); ctx.fill(); }
+      continue;
+    }
+    if (w[i] > 0) { acc += w[i] * (t2.dist[i] - t.dist[i]); tot += w[i]; if (worst < 0 || t2.dist[i] - t.dist[i] > t2.dist[worst] - t.dist[worst]) worst = i; }
+  }
+  // the closed stretches, dashed, with a no-entry sign
+  ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+  for (const pass of [[css("--land"), 7, []], [css("--closed"), 4, [5, 4]]]) {
+    ctx.strokeStyle = pass[0]; ctx.lineWidth = pass[1]; ctx.setLineDash(pass[2]);
+    ctx.beginPath(); for (const q of shut) tracePath(ctx, q.e * 2); ctx.stroke();
+  }
+  ctx.restore();
+  for (const c of S.closed) if (c.e >= 0) noEntry(ctx, c.x, c.y);
+  marker(ctx, G.x[S.dest], G.y[S.dest], 6, css("--route-no"), "");
+  current = { t: t2, t1: t, closedView: true };
+  const towns = G.villages.map((p) => ({ p, node: nodeAt(p) })).filter((r) => r.node !== S.dest && (!sc || sc(r.node)))
+    .map(({ p, node }) => ({ p, d: t2.dist[node] - t.dist[node] })).filter((r) => r.d >= 0.5).sort((a, b) => b.d - a.d).slice(0, 3);
+  const { med } = median(t, w), { med: med2 } = median(t2, w);
+  const cutPct = 100 * cut / ((tot + cut) || 1);
+  title(n ? `With ${n} ${n === 1 ? "road" : "roads"} closed, all roads lead to` : "All roads lead to", S.destName,
+    n ? (fmtT(med2) === fmtT(med) ? `Half the ${unitWord()} ${scopeText()} ${isAre()} still within <b>${fmtT(med2)}</b>.` : `Half the ${unitWord()} ${scopeText()} ${isAre()} within <b>${fmtT(med2)}</b>, against ${fmtT(med)} with every road open.`) + `<br>Average extra: <b>${fmtT(acc / (tot || 1), true)}</b>` +
+      (worst >= 0 && t2.dist[worst] - t.dist[worst] >= 0.5 ? `; worst: ${esc(placeName(G.x[worst], G.y[worst]))}, <b>+${fmtT(t2.dist[worst] - t.dist[worst], true)}</b>.` : ".") +
+      (towns.length ? `<br>Hardest hit: ` + towns.map((r) => `${esc(r.p.name)} +${fmtT(r.d, true)}`).join(" · ") : "") +
+      (cut > 0 ? `<br><b>${cutPct < 0.1 ? "Under 0.1" : cutPct.toFixed(1)}%</b> of the ${unitWord()} is cut off: no way through by car.` : "")
+      : `Every road is open. Click a road on the map to close it and see the detours.`);
+  syncClosed();
+  const steps = [0, 1, 2, 3, 5];
+  $("#legend").innerHTML = `<div class="label">Time the closures add</div>` +
+    steps.map((m, k) => `<div class="row"><span class="sw" style="background:${ramp(m)}"></span>${m} min${k === steps.length - 1 ? " or more" : ""}</div>`).join("") +
+    `<div class="row"><span class="sw" style="background:repeating-linear-gradient(90deg,var(--closed) 0 5px,transparent 5px 9px)"></span>Closed road</div>` +
+    `<div class="row"><span class="dot" style="width:6px;height:6px;background:var(--closed)"></span>Cut off</div>` +
+    `<div class="row" style="margin-top:6px;color:var(--muted)">Lines show the quickest routes by car around the closures.</div>`;
+}
+function noEntry(c, x, y) {
+  const X = view.px(x), Y = view.py(y);
+  c.beginPath(); c.arc(X, Y, 7, 0, 7); c.fillStyle = css("--closed"); c.fill();
+  c.lineWidth = 1.5; c.strokeStyle = "#fff"; c.stroke();
+  c.fillStyle = "#fff"; c.fillRect(X - 4, Y - 1.25, 8, 2.5);
+}
+const closedName = (c) => (c.e >= 0 && G.en[c.e] ? G.names[G.en[c.e]] : "") || placeName(c.x, c.y).replace(/^near /, "Lane near ");
+function syncClosed() {
+  $("#closedlist").innerHTML = S.closed.map((c, i) => `<span class="tag"><span class="no-entry"></span>${esc(closedName(c))}<button type="button" data-i="${i}" aria-label="Reopen ${esc(closedName(c))}">×</button></span>`).join("");
+  $("#reopen").hidden = !S.closed.length;
 }
 function seedList() {
   if (S.seeds === "churches") return G.churches.map((c) => ({ name: G.parishes[c.parish], x: c.x, y: c.y, node: nodeAt(c), parish: c.parish }));
@@ -695,6 +835,7 @@ function onMove(ev) {
   } else {
     trace(css("--land"), 6); trace(css("--route-no"), 3);
     if (current.slow) html = head + `Today <span class="t">${fmtT(current.t1.dist[i])}</span><br>At ${G.slow} mph <span class="t">${fmtT(t.dist[i])}</span>`;
+    else if (current.closedView) html = head + (isFinite(t.dist[i]) ? `With the closures <span class="t">${fmtT(t.dist[i])}</span><br>Every road open <span class="t">${fmtT(current.t1.dist[i])}</span>` : `<span class="t">Cut off</span> by the closures`);
     else if (current.seeds) {
       const s = current.seeds[t.lab[i]];
       html = head + `Drains to ${esc(s?.name || "—")}, <span class="t">${fmtC(t.dist[i])}</span>` +
@@ -718,6 +859,12 @@ function nameFor(i) {
 function onClick(ev) {
   const r = cv.getBoundingClientRect();
   const x = view.ix(ev.clientX - r.left), y = view.iy(ev.clientY - r.top);
+  if (S.kind === "closed") {
+    const hit = closureAt(x, y, 14 / view.s); if (!hit) return;
+    const k = S.closed.findIndex((c) => c.pts.some((q) => hit.pts.some((h) => h.e === q.e)));
+    if (k >= 0) S.closed.splice(k, 1); else if (S.closed.length < 40) S.closed.push(hit);
+    setHash(); render(); return;
+  }
   const i = nearestNode(G, x, y, 1.5); if (i < 0) return;
   const nm = nameFor(i);
   if (S.kind === "sheds") {
@@ -744,7 +891,8 @@ function setDest(x, y, name, hash = true) {
 }
 function setHash() {
   const d = slug(S.destName.replace(/^near /, ""));
-  const h = S.kind === "sheds" ? (S.seeds === "villages" ? "villages" : "watersheds") : S.kind === "meet" ? "meet-up" : S.kind === "slow" ? "20-mph-" + d : d;
+  const h = S.kind === "sheds" ? (S.seeds === "villages" ? "villages" : "watersheds") : S.kind === "meet" ? "meet-up" : S.kind === "slow" ? "20-mph-" + d
+    : S.kind === "closed" ? "closures-" + d + (S.closed.length ? "/c=" + S.closed.map((c) => c.pts.map((q) => Math.round(q.x * 1000).toString(36) + "." + Math.round(q.y * 1000).toString(36)).join("~")).join("_") : "") : d;
   try { history.replaceState(null, "", "#" + h + (T() === "car" ? "" : "/" + T())); } catch (e) {}
 }
 function syncChips() {
@@ -809,6 +957,8 @@ function initControls() {
   $("#near").addEventListener("input", (e) => { S.near = +e.target.value; syncChips(); render(); });
   $("#tpresets").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; loadPreset(b.dataset.v); render(); });
   $("#travellers").addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (!b) return; S.travellers.splice(+b.dataset.i, 1); syncTravellers(); render(); });
+  $("#closedlist").addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (!b) return; S.closed.splice(+b.dataset.i, 1); setHash(); render(); });
+  $("#reopen").addEventListener("click", () => { S.closed = []; setHash(); render(); });
   cv.addEventListener("pointermove", onMove);
   cv.addEventListener("pointerleave", () => { $("#tip").hidden = true; hx.clearRect(0, 0, view.W, view.H); });
   cv.addEventListener("click", onClick);
@@ -832,6 +982,13 @@ function fromHash() {
   if (h === "villages") { S.kind = "sheds"; S.seeds = "villages"; return; }
   if (h === "meet-up") { S.kind = "meet"; loadPreset("corners"); return; }
   if (h.startsWith("20-mph")) { S.kind = "slow"; h = h.slice(7); if (!h) return; }
+  if (h.startsWith("closures")) {
+    S.kind = "closed";
+    const [head, list] = h.split("/c=");
+    S.closed = (list || "").split("_").filter(Boolean).map((c) => ({ e: -1, pts: c.split("~").map((p) => { const [x, y] = p.split(".").map((v) => parseInt(v, 36) / 1000); return { x, y, e: -1 }; })
+      .filter((q) => isFinite(q.x) && isFinite(q.y)) })).filter((c) => c.pts.length);
+    h = head.slice(9); if (!h) return;
+  }
   if (h) { const s = G.search.find((s) => slug(s.name) === h); if (s) setDest(s.x, s.y, s.name, false); }
 }
 
@@ -841,7 +998,7 @@ function fromHash() {
   const home = findName("St Helier"); setDest(home.x, home.y, home.name, false);
   fromHash();
   initControls(); syncChips(); layout(); render();
-  addEventListener("hashchange", () => { S.kind = "one"; S.seeds = "churches"; fromHash(); syncChips(); render(); });
+  addEventListener("hashchange", () => { S.kind = "one"; S.seeds = "churches"; S.closed = []; fromHash(); syncChips(); render(); });
 })();
 </script>
 </body>

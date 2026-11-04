@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Four maps</title>
+<!-- Renders docs/modes.png (1600×1224). From the repo root: python3 -m http.server 8765, then
+     chromium --headless --hide-scrollbars --window-size=1600,1224 --virtual-time-budget=20000 \
+       --screenshot=docs/modes.png http://localhost:8765/build/modes-card.html -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root { --sea: #dbe4e7; --ink: #1c2226; --muted: #5d676d; --map: #0f1619; }
+  html, body { margin: 0; width: 1600px; height: 1224px; overflow: hidden; background: var(--sea); color: var(--ink); font-family: "Hanken Grotesk", Arial, sans-serif; }
+  header { display: flex; align-items: baseline; gap: 24px; padding: 36px 48px 24px; }
+  h1 { font-weight: 800; font-size: 46px; letter-spacing: -0.02em; margin: 0; }
+  .credit { margin-left: auto; font-size: 16px; color: var(--muted); font-weight: 500; }
+  .url { font-family: "JetBrains Mono", monospace; font-size: 20px; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(2, 740px); gap: 22px 24px; padding: 0 48px; }
+  figure { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  figcaption { display: flex; gap: 12px; align-items: baseline; }
+  figcaption b { font-size: 22px; font-weight: 800; }
+  figcaption span { font-size: 16px; color: var(--muted); font-weight: 500; }
+  .map { background: var(--map); overflow: hidden; height: 487px; border-radius: 4px; display: flex; align-items: center; }
+  /* each iframe shows the live page; onload hides everything but the map */
+  iframe { border: 0; width: 740px; height: 487px; display: block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>All Roads Lead To (Jersey)</h1>
+  <span class="url">lecuirot.je/roads</span>
+  <span class="credit">Map data © OpenStreetMap contributors</span>
+</header>
+<div class="grid">
+  <figure><figcaption><b>One destination</b><span>Every junction's quickest route to St Helier</span></figcaption>
+    <div class="map"><iframe src="../index.html#st-helier" title="Routes to St Helier" onload="mapOnly(this)"></iframe></div></figure>
+  <figure><figcaption><b>Watersheds</b><span>Which parish church each junction reaches first</span></figcaption>
+    <div class="map"><iframe src="../index.html#watersheds" title="Parish church watersheds" onload="mapOnly(this)"></iframe></div></figure>
+  <figure><figcaption><b>Meet up</b><span>The fairest place for the four corners</span></figcaption>
+    <div class="map"><iframe src="../index.html#meet-up" title="Meet up" onload="mapOnly(this)"></iframe></div></figure>
+  <figure><figcaption><b>20 mph island</b><span>Minutes today's limits save on the way to town</span></figcaption>
+    <div class="map"><iframe src="../index.html#20-mph-st-helier" title="20 mph island" onload="mapOnly(this)"></iframe></div></figure>
+</div>
+<script>
+function mapOnly(f) {
+  const d = f.contentDocument;
+  d.documentElement.dataset.theme = "dark";
+  const s = d.createElement("style");
+  s.textContent = "body{padding:0!important}.rail,.head,.footnote{display:none!important}.plate{border:0;border-radius:0}";
+  d.head.appendChild(s);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>All Roads Lead To (Jersey)</title>
+<meta name="description" content="Every road junction in Jersey, routed to one place and drawn as a tree of quickest routes.">
+<link rel="canonical" href="https://www.lecuirot.je/roads/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="All Roads Lead To (Jersey)">
+<meta property="og:title" content="All roads lead to St Helier">
+<meta property="og:description" content="Every road junction in Jersey, routed to one place. Try any village or road, the parish-church watersheds, the fairest place to meet, or Jersey at 20 mph.">
+<meta property="og:url" content="https://www.lecuirot.je/roads/">
+<meta property="og:image" content="https://www.lecuirot.je/roads/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Map of Jersey with every road route drawn towards St Helier. The A roads into town show as thick red lines.">
+<meta property="og:locale" content="en_GB">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image:alt" content="Map of Jersey with every road route drawn towards St Helier. The A roads into town show as thick red lines.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23dbe4e7'/%3E%3Cpath d='M5 26 Q12 20 16 16 M27 25 Q21 20 16 16 M6 6 Q12 12 16 16 M26 7 Q20 12 16 16' stroke='%23c8102e' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23f6c90e' stroke='%231c2226' stroke-width='1.5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a road-atlas plate (Jersey lies on its side, so the plate is wide) beside a narrow control rail; the map is the page. Stacks on phones. */
+:root {
+  --sea: #dbe4e7;
+  --land: #f8f8f4;
+  --panel: #ffffff;
+  --ink: #1c2226;
+  --muted: #5d676d;
+  --line: #cfd8db;
+  --net: #d9dfdc;
+  --a-road: #c8102e;
+  --b-road: #d27a00;
+  --road: #2a3034;
+  --green-lane: #2e8540;
+  --route-no: #f6c90e;
+  --font-display: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Hanken Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sea: #0f1619; --land: #1a2226; --panel: #151c20; --ink: #e6ebec; --muted: #94a1a7; --line: #2b363b; --net: #263136;
+    --a-road: #ff5c70; --b-road: #f2a93b; --road: #d4dadc; --green-lane: #5cc27a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --sea: #0f1619; --land: #1a2226; --panel: #151c20; --ink: #e6ebec; --muted: #94a1a7; --line: #2b363b; --net: #263136;
+  --a-road: #ff5c70; --b-road: #f2a93b; --road: #d4dadc; --green-lane: #5cc27a; color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0; background: var(--sea); color: var(--ink); font-family: var(--font-body); font-size: 15px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px; box-sizing: border-box;
+}
+.app { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; max-width: 1600px; margin: 0 auto; }
+@media (max-width: 860px) { .app { grid-template-columns: minmax(0, 1fr); } .rail { order: 2; } }
+.rail { display: flex; flex-direction: column; gap: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 18px; min-width: 0; position: sticky; top: max(16px, env(safe-area-inset-top, 0px)); max-height: calc(100vh - 32px); overflow: auto; box-sizing: border-box; }
+@media (max-width: 860px) { .rail { position: static; max-height: none; } }
+.brand h1 { font-family: var(--font-display); font-weight: 800; font-size: 24px; letter-spacing: -0.01em; margin: 0 0 6px; line-height: 1.05; }
+.brand h1 small { display: block; font-size: 13px; font-family: var(--font-data); font-weight: 400; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin-top: 4px; }
+.brand p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+.group { display: flex; flex-direction: column; gap: 8px; }
+.label { font-family: var(--font-data); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chips button {
+  font: inherit; font-size: 13px; font-weight: 500; padding: 5px 10px; border-radius: 3px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: var(--ink);
+}
+.chips button:hover { border-color: var(--muted); }
+/* pressed chips borrow the A-road red of Jersey's flag; settings chips go ink-dark */
+.chips button[aria-pressed="true"] { background: var(--a-road); border-color: var(--a-road); color: #fff; }
+.chips.ink button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+input[type="search"] {
+  font: inherit; font-size: 15px; padding: 8px 10px; border-radius: 3px; border: 1px solid var(--line);
+  background: var(--land); color: var(--ink); width: 100%; box-sizing: border-box;
+}
+.hint { font-size: 12.5px; color: var(--muted); margin: 0; line-height: 1.45; }
+.range { display: flex; align-items: center; gap: 10px; }
+.range input { flex: 1; accent-color: var(--a-road); }
+.range output { font-family: var(--font-data); font-size: 13px; min-width: 4.5em; text-align: right; }
+.stage { position: relative; min-width: 0; }
+.plate { position: relative; background: var(--sea); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; max-width: 100%; }
+.head { display: flex; gap: 24px; justify-content: space-between; align-items: flex-start; padding: 22px 26px 0; }
+.wrap { position: relative; }
+.wrap canvas { display: block; width: 100%; height: auto; }
+#hover { position: absolute; inset: 0; pointer-events: none; }
+#map { cursor: crosshair; touch-action: manipulation; }
+.title-block { min-width: 0; flex: 1; }
+.title-block .lead { font-family: var(--font-data); font-size: clamp(10px, 1.05vw, 13px); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.title-block h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(28px, 4vw, 58px); line-height: 0.95; margin: 4px 0 10px; letter-spacing: -0.02em; text-wrap: balance; }
+.title-block .facts { font-size: clamp(12.5px, 1.1vw, 15px); line-height: 1.45; }
+.title-block .facts b { font-family: var(--font-data); font-weight: 600; }
+.legend { width: 300px; flex: none; font-size: clamp(11.5px, 0.95vw, 13px); line-height: 1.5; display: flex; flex-direction: column; gap: 4px; }
+.legend .row { display: flex; gap: 8px; align-items: center; }
+.legend .sw { width: 22px; height: 4px; border-radius: 1px; flex: none; }
+.legend .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.legend .basin { font-variant-numeric: tabular-nums; }
+.legend .cols { display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; row-gap: 2px; }
+.footnote { font-family: var(--font-data); font-size: 11px; color: var(--muted); line-height: 1.6; margin: 10px 2px 0; max-width: 100ch; }
+.footnote a { color: inherit; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 3px;
+  padding: 7px 9px; font-size: 13px; line-height: 1.4; box-shadow: 0 2px 10px rgb(0 0 0 / 0.12); max-width: 260px; z-index: 3;
+}
+.tip b { font-weight: 700; }
+.tip .t { font-family: var(--font-data); font-weight: 600; }
+.tip .m { color: var(--muted); }
+.loading { position: absolute; inset: 0; min-height: 200px; display: grid; place-items: center; font-family: var(--font-data); font-size: 13px; color: var(--muted); }
+.tag { display: inline-flex; gap: 4px; align-items: center; font-size: 12.5px; border: 1px solid var(--line); border-radius: 3px; padding: 2px 4px 2px 8px; }
+.tag button { border: 0; background: none; color: var(--muted); cursor: pointer; font: inherit; padding: 0 4px; }
+.matches { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+.matches button { display: flex; justify-content: space-between; gap: 8px; text-align: left; font: inherit; font-size: 14px; padding: 6px 10px; border: 0; background: var(--land); color: var(--ink); cursor: pointer; }
+.matches button span { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.matches button:hover, .matches button:focus-visible { background: var(--line); }
+@media (max-width: 860px) {
+  .head { flex-direction: column; gap: 12px; padding: 14px 14px 4px; }
+  .legend { width: auto; }
+  .title-block h2 { font-size: 32px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail" aria-label="Map controls">
+    <div class="brand">
+      <h1>All Roads Lead To <small>Jersey edition</small></h1>
+      <p>Pick a destination. Every road junction in Jersey routes to it, from A roads to green lanes, and the map draws the tree of quickest routes. Thicker lines carry more of the island.</p>
+    </div>
+
+    <div class="group">
+      <span class="label" id="l-kind">Map</span>
+      <div class="chips" role="group" aria-labelledby="l-kind" id="kind">
+        <button type="button" data-v="one" aria-pressed="true">One destination</button>
+        <button type="button" data-v="sheds" aria-pressed="false">Watersheds</button>
+        <button type="button" data-v="meet" aria-pressed="false">Meet up</button>
+        <button type="button" data-v="slow" aria-pressed="false">20 mph island</button>
+      </div>
+    </div>
+
+    <div class="group" data-for="one slow">
+      <label class="label" for="dest">Destination</label>
+      <input type="search" id="dest" placeholder="Search a place, road or beach" autocomplete="off" aria-controls="matches">
+      <div class="matches" id="matches" role="listbox" hidden></div>
+      <div class="chips" id="quick"></div>
+      <p class="hint">Or click anywhere on the map to send every route there.</p>
+    </div>
+
+    <div class="group" data-for="sheds">
+      <span class="label" id="l-seeds">Places that compete</span>
+      <div class="chips" role="group" aria-labelledby="l-seeds" id="seeds">
+        <button type="button" data-v="churches" aria-pressed="true">Parish churches</button>
+        <button type="button" data-v="villages" aria-pressed="false">Towns &amp; villages</button>
+        <button type="button" data-v="picks" aria-pressed="false">My picks</button>
+      </div>
+      <div class="range" id="nbig-wrap"><input type="range" id="nbig" min="2" max="18" value="8" aria-label="Number of towns and villages"><output id="nbig-out">8</output></div>
+      <p class="hint">Every junction drains to the place it can reach fastest. With the parish churches, the dark lines are the real parish boundaries. Click the map to add or remove a place, which switches to My picks.</p>
+    </div>
+
+    <div class="group" data-for="meet">
+      <span class="label" id="l-trav">Travellers</span>
+      <div class="chips" id="travellers" role="group" aria-label="Travellers"></div>
+      <div class="chips" role="group" aria-labelledby="l-trav" id="tpresets">
+        <button type="button" data-v="corners">Four corners</button>
+        <button type="button" data-v="churches">Twelve parishes</button>
+        <button type="button" data-v="clear">Clear</button>
+      </div>
+      <p class="hint">Click the map to add or remove a traveller, or start from a preset.</p>
+      <span class="label" id="l-fair">Best spot means</span>
+      <div class="chips ink" role="group" aria-labelledby="l-fair" id="fair">
+        <button type="button" data-v="max" aria-pressed="true">Nobody drives too long</button>
+        <button type="button" data-v="sum" aria-pressed="false">Least total driving</button>
+      </div>
+    </div>
+
+    <div class="group" data-for="one sheds meet">
+      <span class="label" id="l-mode">Route by</span>
+      <div class="chips ink" role="group" aria-labelledby="l-mode" id="mode">
+        <button type="button" data-v="time" aria-pressed="true">Fastest time</button>
+        <button type="button" data-v="dist" aria-pressed="false">Shortest distance</button>
+      </div>
+    </div>
+
+    <div class="group" data-for="one slow">
+      <span class="label" id="l-scope">Start routes from</span>
+      <div class="chips ink" role="group" aria-labelledby="l-scope" id="scope">
+        <button type="button" data-v="all" aria-pressed="true">Whole island</button>
+        <button type="button" data-v="parish" aria-pressed="false">Same parish</button>
+        <button type="button" data-v="near" aria-pressed="false">Nearby</button>
+      </div>
+      <div class="range" id="near-wrap" hidden><input type="range" id="near" min="2" max="20" step="1" value="8" aria-label="How far away"><output id="near-out">8 min</output></div>
+    </div>
+
+    <div class="group" data-for="one sheds slow">
+      <span class="label" id="l-weight">Line width shows</span>
+      <div class="chips ink" role="group" aria-labelledby="l-weight" id="weight">
+        <button type="button" data-v="area" aria-pressed="true">Land area</button>
+        <button type="button" data-v="pop" aria-pressed="false">People</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="stage">
+    <div class="plate" id="plate">
+      <div class="head">
+        <div class="title-block" id="titleblock" aria-live="polite"></div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="wrap" id="wrap">
+        <canvas id="map" role="img" aria-label="Map of routes across Jersey. The title and facts above it describe what it shows."></canvas>
+        <canvas id="hover" aria-hidden="true"></canvas>
+        <div class="tip" id="tip" hidden></div>
+        <div class="loading" id="loading">Loading Jersey's roads…</div>
+      </div>
+    </div>
+    <p class="footnote" id="footnote">
+      <span id="timing"></span><br>
+      Roads: every OpenStreetMap road a car can use in Jersey, from A roads to green lanes; service roads, tracks and private roads are left out (© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, ODbL). Speeds by road: A roads up to 34 mph, B roads 27, C roads 25, other lanes 23, estate roads 18, green lanes 12, each capped at 85% of the posted limit, plus 3 seconds for every junction passed. One-way streets are respected. No traffic, lights or queues for the tunnel. The 20 mph island cuts every higher limit to 20 mph, at the same 85%. People: each parish's 2021 census population (Statistics Jersey) spread over its homes by floor area, from OpenStreetMap buildings. Land: 50 m squares, each given to its nearest junction.
+      Adapted from Doug Belshaw's <a href="https://roads.dougbelshaw.com" target="_blank" rel="noopener">All Roads Lead To (UK)</a>, after Ethan Mollick's <a href="https://all-roads-lead-to.netlify.app/" target="_blank" rel="noopener">US version</a> and “All Roads Lead to Richmond” by <a href="https://arterialmapping.wordpress.com/2022/03/20/all-roads-lead-to-richmond-2/" target="_blank" rel="noopener">Arterial Mapping</a>. <a href="https://github.com/JamesLEC1999/all-roads-jersey" target="_blank" rel="noopener">Source code</a> (GPL-3.0).
+    </p>
+  </main>
+</div>
+
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+// Served at /, at /roads/, or at /roads with no slash (as a rewrite from another site serves it)
+const BASE = /\/$|\.html?$/.test(location.pathname) ? "" : location.pathname.replace(/^.*\//, "") + "/";
+
+const S = { kind: "one", dest: null, destName: "", mode: "time", scope: "all", near: 8, weight: "area",
+  seeds: "churches", nbig: 8, picks: [], travellers: [], fair: "max" };
+let G = null; // graph
+const M = () => S.kind === "slow" ? "time" : S.mode; // the 20 mph map only compares times
+
+// ---------- data ----------
+function dec(b64, T) {
+  const s = atob(b64); const u = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
+  return new T(u.buffer);
+}
+// towns and villages for the watersheds, main centres first and then the parish villages, so a few spread round the island
+const VILLAGES = ["St Helier", "Les Quennevais", "St Aubin", "Gorey", "St Peter", "St Ouen", "St Martin", "St John", "Trinity",
+  "St Clement", "St Lawrence", "St Mary", "Grouville", "St Saviour", "Maufant", "Sion", "Beaumont", "Carrefour Selous"];
+const HOOD_KINDS = new Set(["town", "village", "suburb", "hamlet", "square", "locality", "isolated_dwelling"]);
+const KIND_LABEL = { town: "Town", village: "Village", suburb: "District", hamlet: "Hamlet", square: "Square", locality: "Place", isolated_dwelling: "Place" };
+async function load() {
+  const r = await fetch(BASE + "graph.json");
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  const d = await r.json();
+  const g = { n: d.n, m: d.m, x: dec(d.x, Float32Array), y: dec(d.y, Float32Array),
+    eu: dec(d.eu, Int32Array), ev: dec(d.ev, Int32Array), ec: dec(d.ec, Int8Array), ed: dec(d.ed, Int8Array),
+    et: dec(d.et, Float32Array), es: dec(d.es, Float32Array), slow: d.slow_limit, ek: dec(d.ek, Float32Array), en: dec(d.en, Int16Array),
+    go: dec(d.go, Int32Array), gp: dec(d.gp, Int16Array),
+    area: dec(d.area, Float32Array), pop: dec(d.pop, Float32Array), parish: dec(d.parish, Int8Array),
+    parishes: d.parishes, census: d.census, outline: d.outline, names: d.names, places: d.places, roads: d.roads,
+    churches: d.churches, proj: d.proj, q: d.proj.q };
+  // arcs: a = edge*2 (+1 when travelled v->u)
+  const outDeg = new Int32Array(g.n + 1), inDeg = new Int32Array(g.n + 1);
+  const arcs = [];
+  for (let e = 0; e < g.m; e++) {
+    if (g.ed[e] & 1) arcs.push(e * 2);
+    if (g.ed[e] & 2) arcs.push(e * 2 + 1);
+  }
+  const from = (a) => (a & 1) ? g.ev[a >> 1] : g.eu[a >> 1];
+  const to = (a) => (a & 1) ? g.eu[a >> 1] : g.ev[a >> 1];
+  for (const a of arcs) { outDeg[from(a) + 1]++; inDeg[to(a) + 1]++; }
+  for (let i = 0; i < g.n; i++) { outDeg[i + 1] += outDeg[i]; inDeg[i + 1] += inDeg[i]; }
+  g.outOff = outDeg; g.inOff = inDeg;
+  g.outArc = new Int32Array(arcs.length); g.inArc = new Int32Array(arcs.length);
+  const oc = outDeg.slice(0, g.n), ic = inDeg.slice(0, g.n);
+  for (const a of arcs) { g.outArc[oc[from(a)]++] = a; g.inArc[ic[to(a)]++] = a; }
+  g.from = from; g.to = to;
+  // a road name at every junction, for labels: the biggest named road through it
+  g.nodeName = new Int16Array(g.n); const best = new Int8Array(g.n).fill(9);
+  for (let e = 0; e < g.m; e++) {
+    if (!g.en[e]) continue;
+    for (const v of [g.eu[e], g.ev[e]]) if (g.ec[e] < best[v]) { best[v] = g.ec[e]; g.nodeName[v] = g.en[e]; }
+  }
+  // bounds
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const [, ring] of g.outline) for (const [x, y] of ring) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  g.bounds = { x0: x0 - 0.5, x1: x1 + 0.5, y0: y0 - 0.5, y1: y1 + 0.5 };
+  // spatial bins for nearest junction
+  g.B = 0.4; g.bins = new Map();
+  for (let i = 0; i < g.n; i++) {
+    const k = Math.floor(g.x[i] / g.B) + "," + Math.floor(g.y[i] / g.B);
+    let b = g.bins.get(k); if (!b) g.bins.set(k, b = []); b.push(i);
+  }
+  for (const p of g.places) p.node = nearestNode(g, p.x, p.y, 3);
+  for (const c of g.churches) c.node = nearestNode(g, c.x, c.y, 3);
+  g.hoods = g.places.filter((p) => HOOD_KINDS.has(p.kind));
+  g.villages = VILLAGES.map((n) => g.places.find((p) => p.name === n)).filter(Boolean);
+  g.search = g.places.map((p) => ({ name: p.name, kind: KIND_LABEL[p.kind] || p.kind, node: p.node, rank: HOOD_KINDS.has(p.kind) ? 0 : 1 }))
+    .concat(g.roads.map(([name, node]) => ({ name, kind: "Road", node, rank: 2 })));
+  for (const s of g.search) s.key = fold(s.name);
+  return g;
+}
+function nearestNode(g, x, y, maxKm = 2) {
+  const bx = Math.floor(x / g.B), by = Math.floor(y / g.B);
+  let best = Infinity, bi = -1;
+  for (let r = 0; r <= Math.ceil(maxKm / g.B); r++) {
+    for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+      const b = g.bins.get((bx + dx) + "," + (by + dy)); if (!b) continue;
+      for (const i of b) { const d = (g.x[i] - x) ** 2 + (g.y[i] - y) ** 2; if (d < best) { best = d; bi = i; } }
+    }
+    if (bi >= 0 && Math.sqrt(best) < r * g.B) break;
+  }
+  return bi;
+}
+function placeName(x, y) {
+  let best = Infinity, nm = "";
+  for (const p of G.hoods) { const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < best) { best = d; nm = p.name; } }
+  return Math.sqrt(best) < 0.5 ? nm : "near " + nm;
+}
+// the road a junction sits on: the arc it leaves by, if named, else the biggest named road through it
+const roadAt = (i, a = -1) => (a >= 0 && G.en[a >> 1]) ? G.names[G.en[a >> 1]] : G.names[G.nodeName[i]] || "";
+const parishOf = (i) => G.parishes[G.parish[i]];
+function fold(s) { return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[’']/g, "'"); }
+
+// ---------- routing ----------
+class Heap {
+  constructor(n) { this.k = new Float64Array(n); this.v = new Int32Array(n); this.s = 0; }
+  push(k, v) { let i = this.s++; while (i > 0) { const p = (i - 1) >> 1; if (this.k[p] <= k) break; this.k[i] = this.k[p]; this.v[i] = this.v[p]; i = p; } this.k[i] = k; this.v[i] = v; }
+  pop() {
+    const top = this.v[0], k = this.k[--this.s], v = this.v[this.s]; let i = 0;
+    for (;;) { let c = 2 * i + 1; if (c >= this.s) break; if (c + 1 < this.s && this.k[c + 1] < this.k[c]) c++; if (this.k[c] >= k) break; this.k[i] = this.k[c]; this.v[i] = this.v[c]; i = c; }
+    this.k[i] = k; this.v[i] = v; return top;
+  }
+}
+// reverse = true: cost from every node TO the sources; false: FROM the sources
+function dijkstra(sources, { reverse = true, mode = M() } = {}) {
+  const g = G, n = g.n;
+  const dist = new Float64Array(n).fill(Infinity), arc = new Int32Array(n).fill(-1), lab = new Int16Array(n).fill(-1);
+  const order = new Int32Array(n); let cnt = 0;
+  const done = new Uint8Array(n);
+  const h = new Heap(g.outArc.length + sources.length + 4);
+  sources.forEach((s, i) => { if (s >= 0 && dist[s] > 0) { dist[s] = 0; lab[s] = i; h.push(0, s); } });
+  const cost = mode === "dist" ? g.ek : mode === "slow" ? g.es : g.et;
+  const off = reverse ? g.inOff : g.outOff, list = reverse ? g.inArc : g.outArc;
+  while (h.s) {
+    const u = h.pop(); if (done[u]) continue; done[u] = 1; order[cnt++] = u;
+    const du = dist[u];
+    for (let j = off[u]; j < off[u + 1]; j++) {
+      const a = list[j], e = a >> 1;
+      const w = reverse ? g.from(a) : g.to(a);
+      const nd = du + cost[e];
+      if (nd < dist[w]) { dist[w] = nd; arc[w] = a; lab[w] = lab[u]; h.push(nd, w); }
+    }
+  }
+  return { dist, arc, lab, order: order.subarray(0, cnt) };
+}
+// next node toward the root of a tree
+const parentOf = (t, i, reverse = true) => t.arc[i] < 0 ? -1 : (reverse ? G.to(t.arc[i]) : G.from(t.arc[i]));
+
+// ---------- drawing ----------
+const cv = $("#map"), hv = $("#hover"), ctx = cv.getContext("2d"), hx = hv.getContext("2d");
+let view = null;
+function layout() {
+  const b = G.bounds;
+  const W = $("#wrap").clientWidth;
+  const ratio = (b.y1 - b.y0) / (b.x1 - b.x0);
+  const H = Math.round(W * ratio);
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  for (const c of [cv, hv]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); c.style.height = H + "px"; }
+  const s = W / (b.x1 - b.x0);
+  view = { W, H, dpr, s, px: (x) => (x - b.x0) * s, py: (y) => (b.y1 - y) * s, ix: (px) => px / s + b.x0, iy: (py) => b.y1 - py / s };
+}
+function ringPath(c, ring) { ring.forEach(([x, y], i) => i ? c.lineTo(view.px(x), view.py(y)) : c.moveTo(view.px(x), view.py(y))); c.closePath(); }
+function drawLand() {
+  ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+  ctx.fillStyle = css("--sea"); ctx.fillRect(0, 0, view.W, view.H);
+  // each parish on its own, so an enclave never cancels its neighbour's hole
+  ctx.fillStyle = css("--land");
+  for (let p = 0; p < G.parishes.length; p++) {
+    ctx.beginPath(); for (const [pi, ring] of G.outline) if (pi === p) ringPath(ctx, ring); ctx.fill("evenodd");
+  }
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 0.8;
+  ctx.beginPath(); for (const [, ring] of G.outline) ringPath(ctx, ring); ctx.stroke();
+  // every road, faintly, under the routes
+  ctx.strokeStyle = css("--net"); ctx.lineWidth = 0.7; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.beginPath(); for (let e = 0; e < G.m; e++) tracePath(ctx, e * 2); ctx.stroke();
+}
+function drawParishLines() {
+  ctx.save(); ctx.globalAlpha = 0.7; ctx.strokeStyle = css("--ink"); ctx.lineWidth = 1.1;
+  ctx.beginPath(); for (const [, ring] of G.outline) ringPath(ctx, ring); ctx.stroke(); ctx.restore();
+}
+// trace an edge's geometry in the direction of arc a
+function tracePath(c, a, first = true) {
+  const g = G, e = a >> 1, rev = a & 1, q = g.q;
+  const u = g.eu[e], v = g.ev[e];
+  const pts = [[g.x[u], g.y[u]]];
+  let px = Math.round(g.x[u] * q), py = Math.round(g.y[u] * q);
+  for (let k = g.go[e]; k < g.go[e + 1]; k++) { px += g.gp[2 * k]; py += g.gp[2 * k + 1]; pts.push([px / q, py / q]); }
+  pts.push([g.x[v], g.y[v]]);
+  if (rev) pts.reverse();
+  pts.forEach(([x, y], i) => (i === 0 && first) ? c.moveTo(view.px(x), view.py(y)) : c.lineTo(view.px(x), view.py(y)));
+}
+const classColor = () => [css("--a-road"), css("--b-road"), css("--road"), css("--green-lane")];
+function widthFor(f, total) { return Math.max(0.5, 0.5 + view.W / 58 * Math.pow(f / total, 0.55)); }
+// draw a tree: flow[i] is the load on node i's outgoing tree arc
+function drawTree(t, flow, total, colorOf) {
+  const g = G, items = [];
+  for (let i = 0; i < g.n; i++) if (t.arc[i] >= 0 && flow[i] > 0) items.push(i);
+  items.sort((a, b) => flow[a] - flow[b]);
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  const buckets = new Map();
+  for (const i of items) {
+    const w = Math.round(widthFor(flow[i], total) * 4) / 4;
+    const col = colorOf(i);
+    const key = w + "|" + col;
+    let b = buckets.get(key); if (!b) buckets.set(key, b = { w, col, arcs: [], order: flow[i] });
+    b.arcs.push(t.arc[i]); b.order = Math.max(b.order, flow[i]);
+  }
+  for (const b of [...buckets.values()].sort((a, c) => a.order - c.order)) {
+    ctx.strokeStyle = b.col; ctx.lineWidth = b.w;
+    ctx.beginPath(); for (const a of b.arcs) tracePath(ctx, a); ctx.stroke();
+  }
+}
+function marker(c, x, y, r, fill, label, opts = {}) {
+  const X = view.px(x), Y = view.py(y);
+  c.beginPath(); c.arc(X, Y, r, 0, Math.PI * 2); c.fillStyle = fill; c.fill();
+  c.lineWidth = 2; c.strokeStyle = css("--land"); c.stroke();
+  if (label) {
+    c.font = `${opts.bold ? 700 : 500} ${opts.size || 12}px ${css("--font-body")}`;
+    c.lineWidth = 3.5; c.strokeStyle = css("--land"); c.fillStyle = css("--ink");
+    c.strokeText(label, X + r + 4, Y + 4); c.fillText(label, X + r + 4, Y + 4);
+  }
+}
+const fmtT = (m, fine = false) => {
+  if (!isFinite(m)) return "—";
+  if (fine && m < 10) return `${m.toFixed(1)} min`;
+  if (m < 0.5) return "under 1 min";
+  m = Math.round(m); const h = Math.floor(m / 60), mm = m % 60;
+  return h ? `${h} h ${String(mm).padStart(2, "0")} min` : `${mm} min`;
+};
+const fmtMi = (mi) => { const v = mi < 10 ? mi.toFixed(1) : String(Math.round(mi)); return v === "1.0" ? "1 mile" : v + " miles"; };
+const fmtD = (km) => fmtMi(km * 0.621371);
+const fmtC = (v, fine) => M() === "dist" ? fmtD(v) : fmtT(v, fine);
+const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const fmtN = (v) => Math.round(v).toLocaleString("en-GB");
+const PALETTE = ["#d1495b", "#1663b0", "#00916e", "#edae49", "#7b4fa0", "#e07a2f", "#2e9fbf", "#8c6d46", "#c2559a", "#5c8f2f", "#384d9e", "#b8862a"];
+const PALETTE_DARK = ["#ef6f80", "#5aa2ee", "#2fc49b", "#f2c46e", "#a988d0", "#f39b5a", "#5cc6e0", "#c19a6b", "#e586c0", "#8fc45c", "#7f93e0", "#e0b45a"];
+const matchDark = () => document.documentElement.dataset.theme === "dark" || (document.documentElement.dataset.theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+const pal = (i) => (matchDark() ? PALETTE_DARK : PALETTE)[i % PALETTE.length];
+
+// ---------- weights ----------
+function weights(scopeFn) {
+  const w = S.weight === "pop" ? G.pop : G.area;
+  const out = new Float64Array(G.n);
+  for (let i = 0; i < G.n; i++) if (!scopeFn || scopeFn(i)) out[i] = w[i];
+  return out;
+}
+function accumulate(t, w, reverse = true) {
+  const f = Float64Array.from(w);
+  for (let k = t.order.length - 1; k >= 0; k--) { const i = t.order[k]; const p = parentOf(t, i, reverse); if (p >= 0) f[p] += f[i]; }
+  return f;
+}
+function median(t, w) {
+  const idx = []; let tot = 0;
+  for (let i = 0; i < G.n; i++) if (w[i] > 0 && isFinite(t.dist[i])) { idx.push(i); tot += w[i]; }
+  idx.sort((a, b) => t.dist[a] - t.dist[b]);
+  let acc = 0; for (const i of idx) { acc += w[i]; if (acc >= tot / 2) return { med: t.dist[i], tot }; }
+  return { med: 0, tot };
+}
+const unitWord = () => S.weight === "pop" ? "people" : "land";
+const isAre = () => S.weight === "pop" ? "are" : "is";
+const counted = (tot) => S.weight === "pop" ? `${fmtN(tot)} people counted.` : `${tot.toFixed(1)} km² of land counted.`;
+
+// ---------- views ----------
+function render() {
+  if (!G) return;
+  const t0 = performance.now();
+  drawLand();
+  hx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0); hx.clearRect(0, 0, view.W, view.H);
+  $("#tip").hidden = true;
+  syncTravellers();
+  ({ one: renderOne, sheds: renderSheds, meet: renderMeet, slow: renderSlow })[S.kind]();
+  $("#timing").textContent = `Routed and drawn in ${Math.round(performance.now() - t0)} ms · ${G.n.toLocaleString("en-GB")} junctions · ${G.roads.length.toLocaleString("en-GB")} named roads`;
+}
+function scopeFor(t) {
+  if (S.scope === "parish") { const p = G.parish[S.dest]; return (i) => G.parish[i] === p; }
+  if (S.scope === "near") { const lim = M() === "dist" ? S.near * 0.4 * 1.609344 : S.near; return (i) => t.dist[i] <= lim; }
+  return null;
+}
+const nearText = () => M() === "dist" ? fmtMi(S.near * 0.4) : S.near + " min";
+const scopeText = () => S.scope === "parish" ? `of ${parishOf(S.dest)}` : S.scope === "near" ? `within ${nearText()}` : "in Jersey";
+
+let current = null; // what the hover tooltip reads
+function renderOne() {
+  const t = dijkstra([S.dest]);
+  const sc = scopeFor(t), w = weights(sc), f = accumulate(t, w);
+  const col = classColor();
+  drawTree(t, f, f[S.dest] || 1, (i) => col[G.ec[t.arc[i] >> 1]]);
+  marker(ctx, G.x[S.dest], G.y[S.dest], 6, css("--route-no"), "");
+  const { med, tot } = median(t, w);
+  let far = -1; for (let i = 0; i < G.n; i++) if (w[i] > 0 && isFinite(t.dist[i]) && (far < 0 || t.dist[i] > t.dist[far])) far = i;
+  current = { t };
+  title(M() === "dist" ? "Shortest routes to" : "All roads lead to", S.destName,
+    `Half of the ${unitWord()} ${scopeText()} ${isAre()} within <b>${fmtC(med)}</b>.` +
+    (far >= 0 ? `<br>Farthest start: ${esc(placeName(G.x[far], G.y[far]))}, <b>${fmtC(t.dist[far])}</b>.` : "") +
+    `<br>${counted(tot)}`);
+  legendRoads();
+}
+function renderSlow() {
+  const t = dijkstra([S.dest]), t2 = dijkstra([S.dest], { mode: "slow" });
+  const sc = scopeFor(t), w = weights(sc), f = accumulate(t2, w);
+  // colour each tree line by the minutes today's limits save from that point
+  const top = 8;
+  const ramp = (d) => { const k = Math.min(1, Math.max(0, d) / top); return `hsl(${210 - k * 210} 70% ${matchDark() ? 60 : 45}%)`; };
+  drawTree(t2, f, f[S.dest] || 1, (i) => ramp(t2.dist[i] - t.dist[i]));
+  marker(ctx, G.x[S.dest], G.y[S.dest], 6, css("--route-no"), "");
+  let acc = 0, tot = 0;
+  for (let i = 0; i < G.n; i++) if (w[i] > 0 && isFinite(t2.dist[i])) { acc += w[i] * (t2.dist[i] - t.dist[i]); tot += w[i]; }
+  const towns = G.villages.filter((p) => p.node !== S.dest && (!sc || sc(p.node)))
+    .map((p) => ({ p, d: t2.dist[p.node] - t.dist[p.node] })).filter((r) => r.d >= 0.5).sort((a, b) => b.d - a.d).slice(0, 3);
+  const { med } = median(t, w), { med: med2 } = median(t2, w);
+  current = { t: t2, t1: t, slow: true };
+  title(`At ${G.slow} mph, all roads lead to`, S.destName,
+    `Half the ${unitWord()} ${scopeText()} ${isAre()} within <b>${fmtT(med2)}</b>, against ${fmtT(med)} today.<br>Average extra: <b>${fmtT(acc / (tot || 1), true)}</b>.` +
+    (towns.length ? `<br>Hardest hit: ` + towns.map((r) => `${esc(r.p.name)} +${fmtT(r.d, true)}`).join(" · ") : ""));
+  const steps = [0, 2, 4, 6, 8];
+  $("#legend").innerHTML = `<div class="label">Time today's limits save</div>` +
+    steps.map((m, k) => `<div class="row"><span class="sw" style="background:${ramp(m)}"></span>${m} min${k === steps.length - 1 ? " or more" : ""}</div>`).join("") +
+    `<div class="row" style="margin-top:6px;color:var(--muted)">Lines show the quickest routes with every limit above ${G.slow} mph cut to ${G.slow}. Roads already at ${G.slow} mph or less don't change.</div>`;
+}
+function seedList() {
+  if (S.seeds === "churches") return G.churches.map((c) => ({ name: G.parishes[c.parish], node: c.node, parish: c.parish }));
+  if (S.seeds === "picks") return S.picks;
+  return G.villages.slice(0, S.nbig).map((p) => ({ name: p.name, node: p.node }));
+}
+function renderSheds() {
+  const seeds = seedList();
+  if (!seeds.length) { title("Road watersheds of", "your picks", "Click the map to add places."); $("#legend").innerHTML = ""; current = null; return; }
+  const t = dijkstra(seeds.map((s) => s.node));
+  const w = weights(null), f = accumulate(t, w);
+  const sum = new Float64Array(seeds.length); let tot = 0, own = 0;
+  for (let i = 0; i < G.n; i++) if (t.lab[i] >= 0) {
+    sum[t.lab[i]] += w[i]; tot += w[i];
+    if (seeds[t.lab[i]].parish === G.parish[i]) own += w[i];
+  }
+  // colour basins greedily, biggest first, so neighbours never share a colour
+  const nb = seeds.map(() => new Set());
+  for (let e = 0; e < G.m; e++) { const a = t.lab[G.eu[e]], b = t.lab[G.ev[e]]; if (a >= 0 && b >= 0 && a !== b) { nb[a].add(b); nb[b].add(a); } }
+  const cix = new Array(seeds.length).fill(-1), used = new Array(PALETTE.length).fill(0);
+  for (const i of seeds.map((_, i) => i).sort((a, b) => sum[b] - sum[a])) {
+    const taken = new Set([...nb[i]].map((j) => cix[j]));
+    let best = -1; for (let c = 0; c < PALETTE.length; c++) if (!taken.has(c) && (best < 0 || used[c] < used[best])) best = c;
+    cix[i] = best < 0 ? i % PALETTE.length : best; used[cix[i]]++;
+  }
+  const bc = (i) => pal(cix[i]);
+  drawTree(t, f, tot / Math.sqrt(seeds.length) || 1, (i) => bc(t.lab[i]));
+  const churches = S.seeds === "churches";
+  if (churches) drawParishLines();
+  seeds.forEach((s, i) => marker(ctx, G.x[s.node], G.y[s.node], 5, bc(i), seeds.length <= 20 ? s.name : "", { bold: true }));
+  current = { t, seeds };
+  const rank = seeds.map((s, i) => ({ s, i, v: sum[i] })).sort((a, b) => b.v - a.v);
+  const top = rank[0];
+  title(M() === "dist" ? "Shortest-distance road watersheds of" : "Road watersheds of",
+    churches ? "the parish churches" : S.seeds === "picks" ? `${seeds.length} chosen ${seeds.length === 1 ? "place" : "places"}` : `${seeds.length} towns and villages`,
+    `${esc(top.s.name)} drains <b>${Math.round(100 * top.v / tot)}%</b> of the ${unitWord()}.` +
+    (churches ? `<br><b>${Math.round(100 * own / tot)}%</b> of the ${unitWord()} ${isAre()} closer by road to its own parish church than to any other.` : ""));
+  $("#legend").innerHTML = `<div class="label">Basins by ${S.weight === "pop" ? "people" : "land"}</div><div class="cols">` +
+    rank.slice(0, 20).map((r) => `<div class="row basin"><span class="dot" style="background:${bc(r.i)}"></span>${esc(r.s.name)} · ${Math.round(100 * r.v / tot)}%</div>`).join("") + `</div>` +
+    (churches ? `<div class="row" style="margin-top:6px;color:var(--muted)">Dark lines: the real parish boundaries.</div>` : "");
+}
+function renderMeet() {
+  const tr = S.travellers;
+  const L = $("#legend");
+  if (tr.length < 2) {
+    tr.forEach((p, i) => marker(ctx, G.x[p.node], G.y[p.node], 6, pal(i), p.name, { bold: true }));
+    title("Meet up", "somewhere fair", "Add at least two travellers. Click the map or pick a preset.");
+    L.innerHTML = ""; current = null; return;
+  }
+  const trees = tr.map((p) => dijkstra([p.node], { reverse: false }));
+  let best = -1, bestV = Infinity;
+  const score = new Float64Array(G.n);
+  for (let i = 0; i < G.n; i++) {
+    let mx = 0, sm = 0;
+    for (const t of trees) { const d = t.dist[i]; mx = Math.max(mx, d); sm += d; }
+    const v = S.fair === "max" ? mx + sm * 1e-4 : sm;
+    score[i] = v; if (v < bestV) { bestV = v; best = i; }
+  }
+  if (best < 0) { title("Meet up", "no shared road", "These travellers can't all reach one place by road. Remove one and try again."); L.innerHTML = ""; current = null; return; }
+  // faint field of how fair each junction is
+  const fin = Array.from(score).filter(isFinite).sort((a, b) => a - b);
+  const lo = fin[0], hi = fin[Math.floor(fin.length * 0.9)];
+  const r = Math.max(1.5, view.W / 500);
+  ctx.globalAlpha = 0.55;
+  for (let i = 0; i < G.n; i++) {
+    if (!isFinite(score[i])) continue;
+    const k = Math.min(1, (score[i] - lo) / ((hi - lo) || 1));
+    ctx.fillStyle = `hsl(${140 - 140 * k} 55% ${matchDark() ? 45 : 55}%)`;
+    ctx.beginPath(); ctx.arc(view.px(G.x[i]), view.py(G.y[i]), r, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  tr.forEach((p, k) => {
+    const t = trees[k];
+    ctx.strokeStyle = pal(k); ctx.lineWidth = Math.max(3, view.W / 260);
+    ctx.beginPath(); const arcs = [];
+    for (let i = best; i !== p.node && t.arc[i] >= 0; i = G.from(t.arc[i])) arcs.push(t.arc[i]);
+    arcs.reverse().forEach((a) => tracePath(ctx, a)); ctx.stroke();
+  });
+  tr.forEach((p, i) => marker(ctx, G.x[p.node], G.y[p.node], 6, pal(i), tr.length <= 6 ? p.name : "", { bold: true }));
+  marker(ctx, G.x[best], G.y[best], 8, css("--route-no"), "");
+  current = { meet: trees, best };
+  const where = placeName(G.x[best], G.y[best]), road = roadAt(best);
+  title(S.fair === "max" ? "The fairest place to meet is" : "Least total driving: meet", where,
+    (road ? `On ${esc(road)}, ${esc(parishOf(best))}.<br>` : "") +
+    tr.map((p, i) => `${esc(p.name)}: <b>${fmtC(trees[i].dist[best])}</b>`).join(tr.length > 4 ? " · " : "<br>"));
+  L.innerHTML = `<div class="label">Every junction, by ${S.fair === "max" ? "longest drive" : "total driving"}</div>` +
+    `<div class="row"><span class="sw" style="background:hsl(140 55% 50%)"></span>Fairest</div><div class="row"><span class="sw" style="background:hsl(0 55% 50%)"></span>Least fair</div>`;
+}
+function title(lead, name, facts) {
+  $("#titleblock").innerHTML = `<div class="lead">${lead}</div><h2>${esc(name)}</h2><div class="facts">${facts}</div>`;
+}
+function legendRoads() {
+  const c = classColor();
+  $("#legend").innerHTML = `<div class="label">Road class</div>` +
+    [["A road", c[0]], ["B road", c[1]], ["Other road", c[2]], ["Green lane (15 mph)", c[3]]].map(([n, col]) => `<div class="row"><span class="sw" style="background:${col}"></span>${n}</div>`).join("") +
+    `<div class="row" style="margin-top:6px;color:var(--muted)">Line width shows the ${S.weight === "pop" ? "people" : "land area"} whose route uses the road. Hover over the map for any single route.</div>`;
+}
+
+// ---------- hover ----------
+function onMove(ev) {
+  if (!current || !G || ev.pointerType === "touch") return;
+  const r = cv.getBoundingClientRect();
+  const mx = ev.clientX - r.left, my = ev.clientY - r.top;
+  const i = nearestNode(G, view.ix(mx), view.iy(my), 0.8);
+  hx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0); hx.clearRect(0, 0, view.W, view.H);
+  const tip = $("#tip");
+  if (i < 0) { tip.hidden = true; return; }
+  const t = current.t;
+  const road = roadAt(i, t ? t.arc[i] : -1);
+  const head = `<b>${esc(road || placeName(G.x[i], G.y[i]))}</b><br><span class="m">${esc(road ? placeName(G.x[i], G.y[i]) + ", " : "")}${esc(parishOf(i))}</span><br>`;
+  let html = "";
+  hx.lineCap = "round"; hx.lineJoin = "round";
+  const trace = (col, w) => {
+    hx.strokeStyle = col; hx.lineWidth = w; hx.beginPath();
+    for (let k = i; t.arc[k] >= 0; k = G.to(t.arc[k])) tracePath(hx, t.arc[k]);
+    hx.stroke();
+  };
+  if (current.meet) {
+    html = head + S.travellers.map((p, k) => `${esc(p.name)}: <span class="t">${fmtC(current.meet[k].dist[i])}</span>`).join("<br>");
+  } else {
+    trace(css("--land"), 6); trace(css("--route-no"), 3);
+    if (current.slow) html = head + `Today <span class="t">${fmtT(current.t1.dist[i])}</span><br>At ${G.slow} mph <span class="t">${fmtT(t.dist[i])}</span>`;
+    else if (current.seeds) {
+      const s = current.seeds[t.lab[i]];
+      html = head + `Drains to ${esc(s?.name || "—")}, <span class="t">${fmtC(t.dist[i])}</span>` +
+        (s && s.parish != null && s.parish !== G.parish[i] ? `<br><span class="m">Not its own parish church</span>` : "");
+    } else html = head + `<span class="t">${fmtC(t.dist[i])}</span> to ${esc(S.destName)}`;
+  }
+  hx.beginPath(); hx.arc(view.px(G.x[i]), view.py(G.y[i]), 4, 0, 7); hx.fillStyle = css("--ink"); hx.fill();
+  tip.innerHTML = html; tip.hidden = false;
+  const wr = $("#wrap").getBoundingClientRect();
+  const tx = ev.clientX - wr.left + 14, ty = ev.clientY - wr.top + 14;
+  tip.style.left = Math.max(4, Math.min(tx, wr.width - tip.offsetWidth - 8)) + "px";
+  tip.style.top = Math.max(4, ty + tip.offsetHeight + 8 > wr.height ? ty - tip.offsetHeight - 24 : ty) + "px";
+}
+// what to call a clicked junction: the place it's in, else the road it's on
+function nameFor(i) {
+  const p = placeName(G.x[i], G.y[i]);
+  if (!p.startsWith("near ")) return p;
+  const road = roadAt(i);
+  return road ? road.replace(/ \([A-Z]\d+\)$/, "") : p;
+}
+function onClick(ev) {
+  const r = cv.getBoundingClientRect();
+  const x = view.ix(ev.clientX - r.left), y = view.iy(ev.clientY - r.top);
+  const i = nearestNode(G, x, y, 1.5); if (i < 0) return;
+  const nm = nameFor(i);
+  if (S.kind === "sheds") {
+    if (S.seeds !== "picks") { S.picks = seedList().slice(); S.seeds = "picks"; syncChips(); setHash(); }
+    const k = S.picks.findIndex((p) => Math.hypot(G.x[p.node] - x, G.y[p.node] - y) < 0.4);
+    if (k >= 0) S.picks.splice(k, 1); else if (S.picks.length < 24) S.picks.push({ name: nm, node: i });
+  } else if (S.kind === "meet") {
+    const k = S.travellers.findIndex((p) => Math.hypot(G.x[p.node] - x, G.y[p.node] - y) < 0.4);
+    if (k >= 0) S.travellers.splice(k, 1); else if (S.travellers.length < 12) S.travellers.push({ name: nm, node: i });
+    syncTravellers();
+  } else {
+    setDest(i, nm);
+  }
+  render();
+}
+
+// ---------- controls ----------
+function slug(s) { return fold(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
+function setDest(node, name, hash = true) {
+  S.dest = node; S.destName = name; $("#dest").value = "";
+  $("#dest").placeholder = name;
+  if (hash) setHash();
+  syncChips();
+}
+function setHash() {
+  const d = slug(S.destName.replace(/^near /, ""));
+  const h = S.kind === "sheds" ? (S.seeds === "villages" ? "villages" : "watersheds") : S.kind === "meet" ? "meet-up" : S.kind === "slow" ? "20-mph-" + d : d;
+  try { history.replaceState(null, "", "#" + h); } catch (e) {}
+}
+function syncChips() {
+  for (const [id, key] of [["kind", "kind"], ["mode", "mode"], ["scope", "scope"], ["weight", "weight"], ["seeds", "seeds"], ["fair", "fair"]])
+    for (const b of document.querySelectorAll(`#${id} button`)) b.setAttribute("aria-pressed", String(b.dataset.v === S[key]));
+  for (const b of document.querySelectorAll("#quick button")) b.setAttribute("aria-pressed", String(b.dataset.v === S.destName));
+  for (const grp of document.querySelectorAll("[data-for]")) grp.hidden = !grp.dataset.for.split(" ").includes(S.kind);
+  $("#near-wrap").hidden = S.scope !== "near";
+  $("#nbig-wrap").hidden = S.seeds !== "villages";
+  $("#near-out").textContent = nearText();
+  $("#near").setAttribute("aria-valuetext", nearText());
+}
+function syncTravellers() {
+  $("#travellers").innerHTML = S.travellers.map((p, i) => `<span class="tag"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:${pal(i)}"></span>${esc(p.name)}<button type="button" data-i="${i}" aria-label="Remove ${esc(p.name)}">×</button></span>`).join("");
+}
+function bindChips(id, key, after) {
+  $("#" + id).addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-v]"); if (!b) return;
+    S[key] = b.dataset.v; syncChips(); if (after) after(); render();
+  });
+}
+const PRESETS = {
+  corners: [["Grosnez", -2.2468, 49.25755], ["Corbière", -2.2501, 49.17984], ["La Rocque", -2.02954, 49.16628], ["Rozel", -2.04786, 49.23713]],
+};
+const QUICK = [["St Helier", "St Helier"], ["Jersey Airport", "Airport"], ["General Hospital", "Hospital"], ["Elizabeth Terminal", "Harbour"],
+  ["Gorey", "Gorey"], ["St Aubin", "St Aubin"], ["Les Quennevais", "Les Quennevais"], ["St Ouen", "St Ouen"],
+  ["Trinity", "Trinity"], ["St Martin", "St Martin"], ["Rozel", "Rozel"], ["Corbière Lighthouse", "Corbière"]];
+function ll(lon, lat) { const p = G.proj; return [(lon - p.lon0) * p.kx, (lat - p.lat0) * p.ky]; }
+const findName = (n) => G.search.find((s) => s.name === n);
+function initControls() {
+  bindChips("kind", "kind", () => {
+    if (S.kind === "meet" && !S.travellers.length) loadPreset("corners");
+    setHash();
+  });
+  bindChips("mode", "mode"); bindChips("scope", "scope"); bindChips("weight", "weight"); bindChips("seeds", "seeds", setHash); bindChips("fair", "fair");
+  $("#quick").innerHTML = QUICK.map(([n, label]) => findName(n) ? `<button type="button" data-v="${esc(n)}">${esc(label)}</button>` : "").join("");
+  $("#quick").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; const p = findName(b.dataset.v); setDest(p.node, p.name); render(); });
+  const inp = $("#dest"), M = $("#matches");
+  let hits = [];
+  inp.addEventListener("input", () => {
+    const q = fold(inp.value.trim());
+    if (q.length < 2) { M.hidden = true; return; }
+    const seen = new Set(); const scored = [];
+    for (const s of G.search) {
+      const at = s.key.indexOf(q);
+      if (at < 0 || (at > 0 && !/[\s'(-]/.test(s.key[at - 1]))) continue;
+      if (seen.has(s.key)) continue; seen.add(s.key);
+      scored.push([at === 0 ? 0 : 1, s.rank, s.name.length, s]);
+    }
+    scored.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
+    hits = scored.slice(0, 8).map((r) => r[3]);
+    M.innerHTML = hits.map((s, k) => `<button type="button" role="option" data-k="${k}">${esc(s.name)}<span>${esc(s.kind)}</span></button>`).join("");
+    M.hidden = !hits.length;
+  });
+  inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { const b = M.querySelector("button"); if (b && !M.hidden) b.click(); } });
+  M.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    const s = hits[+b.dataset.k]; setDest(s.node, s.name); M.hidden = true; render();
+  });
+  $("#nbig").max = G.villages.length;
+  $("#nbig").addEventListener("input", (e) => { S.nbig = +e.target.value; $("#nbig-out").textContent = S.nbig; render(); });
+  $("#near").addEventListener("input", (e) => { S.near = +e.target.value; syncChips(); render(); });
+  $("#tpresets").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; loadPreset(b.dataset.v); render(); });
+  $("#travellers").addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (!b) return; S.travellers.splice(+b.dataset.i, 1); syncTravellers(); render(); });
+  cv.addEventListener("pointermove", onMove);
+  cv.addEventListener("pointerleave", () => { $("#tip").hidden = true; hx.clearRect(0, 0, view.W, view.H); });
+  cv.addEventListener("click", onClick);
+  let rt; new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { layout(); render(); }, 120); }).observe($("#wrap"));
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+  new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+}
+function loadPreset(k) {
+  if (k === "clear") S.travellers = [];
+  else if (k === "churches") S.travellers = G.churches.map((c) => ({ name: G.parishes[c.parish], node: c.node }));
+  else S.travellers = PRESETS[k].map(([name, lon, lat]) => { const [x, y] = ll(lon, lat); return { name, node: nearestNode(G, x, y) }; });
+  syncTravellers();
+}
+function fromHash() {
+  let h = decodeURIComponent(location.hash.slice(1));
+  if (h === "watersheds") { S.kind = "sheds"; S.seeds = "churches"; return; }
+  if (h === "villages") { S.kind = "sheds"; S.seeds = "villages"; return; }
+  if (h === "meet-up") { S.kind = "meet"; loadPreset("corners"); return; }
+  if (h.startsWith("20-mph")) { S.kind = "slow"; h = h.slice(7); if (!h) return; }
+  if (h) { const s = G.search.find((s) => slug(s.name) === h); if (s) setDest(s.node, s.name, false); }
+}
+
+(async () => {
+  try { G = await load(); } catch (e) { $("#loading").textContent = "The road data didn't load. Reload the page to try again."; return; }
+  $("#loading").hidden = true;
+  const home = findName("St Helier"); setDest(home.node, home.name, false);
+  fromHash();
+  initControls(); syncChips(); layout(); render();
+  addEventListener("hashchange", () => { S.kind = "one"; S.seeds = "churches"; fromHash(); syncChips(); render(); });
+})();
+</script>
+</body>
+</html>

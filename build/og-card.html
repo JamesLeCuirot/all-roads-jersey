@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Social card</title>
+<!-- Renders og.png (1200×630). From the repo root: python3 -m http.server 8765, then
+     chromium --headless --hide-scrollbars --window-size=1200,630 --virtual-time-budget=15000 \
+       --screenshot=og.png http://localhost:8765/build/og-card.html -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root { --sea: #dbe4e7; --ink: #1c2226; --muted: #5d676d; --a-road: #c8102e; --b-road: #d27a00; --map: #0f1619; }
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: var(--sea); color: var(--ink); }
+  .card { display: grid; grid-template-columns: 1fr 760px; height: 630px; }
+  .map { background: var(--map); overflow: hidden; height: 630px; position: relative; display: flex; align-items: center; }
+  .credit { position: absolute; right: 12px; bottom: 8px; font-family: "Hanken Grotesk", Arial, sans-serif; font-size: 13px; color: #94a1a7; }
+  .text { padding: 60px 0 52px 60px; display: flex; flex-direction: column; font-family: "Hanken Grotesk", Arial, sans-serif; }
+  .lead { font-family: "JetBrains Mono", monospace; font-size: 20px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-weight: 800; font-size: 100px; line-height: 0.92; letter-spacing: -0.03em; margin: 14px 0 26px; }
+  p { font-size: 28px; line-height: 1.3; margin: 0; max-width: 13em; font-weight: 500; }
+  .key { display: flex; flex-wrap: wrap; gap: 14px 24px; margin-top: auto; font-size: 20px; font-weight: 500; align-items: center; }
+  .key span { display: inline-flex; align-items: center; gap: 10px; }
+  .key i { width: 34px; height: 7px; border-radius: 2px; display: inline-block; }
+  .url { flex-basis: 100%; font-family: "JetBrains Mono", monospace; font-size: 22px; font-weight: 600; }
+  /* the iframe shows the live page at 760 px wide; onload hides everything but the map */
+  iframe { border: 0; width: 760px; height: 560px; display: block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="text">
+    <div class="lead">All roads lead to</div>
+    <h1>St Helier</h1>
+    <p>Every road junction in Jersey, routed to one place.</p>
+    <div class="key">
+      <span><i style="background:var(--a-road)"></i>A road</span>
+      <span><i style="background:var(--b-road)"></i>B road</span>
+      <span class="url">lecuirot.je/roads</span>
+    </div>
+  </div>
+  <div class="map"><iframe src="../index.html#st-helier" title="Map" onload="mapOnly(this)"></iframe><span class="credit">© OpenStreetMap contributors</span></div>
+</div>
+<script>
+function mapOnly(f) {
+  const d = f.contentDocument;
+  d.documentElement.dataset.theme = "dark";
+  const s = d.createElement("style");
+  s.textContent = "body{padding:0!important}.rail,.head,.footnote{display:none!important}.plate{border:0;border-radius:0}";
+  d.head.appendChild(s);
+}
+</script>
+</body>
+</html>

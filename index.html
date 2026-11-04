@@ -101,10 +101,18 @@ input[type="search"] {
 .stage { position: relative; min-width: 0; }
 .plate { position: relative; background: var(--sea); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; max-width: 100%; }
 .head { display: flex; gap: 24px; justify-content: space-between; align-items: flex-start; padding: 22px 26px 0; }
-.wrap { position: relative; }
-.wrap canvas { display: block; width: 100%; height: auto; }
+.wrap { position: relative; overflow: hidden; }
+.wrap canvas { display: block; width: 100%; height: auto; transform-origin: 0 0; }
 #hover { position: absolute; inset: 0; pointer-events: none; }
-#map { cursor: crosshair; touch-action: manipulation; }
+/* one finger scrolls the page; two fingers pinch and move the map */
+#map { cursor: crosshair; touch-action: pan-x pan-y; }
+#map.zoomed { cursor: grab; }
+#map.dragging { cursor: grabbing; }
+.zoom { position: absolute; right: 8px; top: 8px; display: flex; flex-direction: column; gap: 4px; z-index: 2; }
+.zoom button { width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); color: var(--ink); font: 600 18px/1 var(--font-body); cursor: pointer; box-shadow: 0 1px 4px rgb(0 0 0 / 0.08); }
+.zoom button:hover { border-color: var(--muted); }
+.zoom svg { width: 16px; height: 16px; }
+@media (pointer: coarse) { .zoom button { width: 40px; height: 40px; } }
 .title-block { min-width: 0; flex: 1; }
 .title-block .lead { font-family: var(--font-data); font-size: clamp(10px, 1.05vw, 13px); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .title-block h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(28px, 4vw, 58px); line-height: 0.95; margin: 4px 0 10px; letter-spacing: -0.02em; text-wrap: balance; }
@@ -202,7 +210,7 @@ input[type="search"] {
       <input type="search" id="dest" placeholder="Search a place, road or beach" autocomplete="off" aria-controls="matches">
       <div class="matches" id="matches" role="listbox" hidden></div>
       <div class="chips" id="quick"></div>
-      <p class="hint" data-touch="Or tap the map, then Go here, to send every route there.">Or click anywhere on the map to send every route there.</p>
+      <p class="hint" data-touch="Or tap the map, then Go here, to send every route there. Pinch with two fingers to zoom in.">Or click anywhere on the map to send every route there.</p>
     </div>
 
     <div class="group" data-for="sheds">
@@ -225,7 +233,7 @@ input[type="search"] {
         <button type="button" data-v="everyone">Everyone in Jersey</button>
         <button type="button" data-v="clear">Clear</button>
       </div>
-      <p class="hint" data-touch="Tap the map to add a traveller or remove one, or start from a preset. Everyone in Jersey scores every junction as a meeting place for the whole island.">Click the map to add or remove a traveller, or start from a preset. Everyone in Jersey scores every junction as a meeting place for the whole island.</p>
+      <p class="hint" data-touch="Tap the map to add a traveller or remove one (pinch with two fingers to zoom in), or start from a preset. Everyone in Jersey scores every junction as a meeting place for the whole island.">Click the map to add or remove a traveller, or start from a preset. Everyone in Jersey scores every junction as a meeting place for the whole island.</p>
       <span class="label" id="l-fair">Best spot means</span>
       <div class="chips ink" role="group" aria-labelledby="l-fair" id="fair">
         <button type="button" data-v="max" aria-pressed="true">Nobody travels too long</button>
@@ -269,6 +277,11 @@ input[type="search"] {
       <div class="wrap" id="wrap">
         <canvas id="map" role="img" aria-label="Map of routes across Jersey. The title and facts above it describe what it shows."></canvas>
         <canvas id="hover" aria-hidden="true"></canvas>
+        <div class="zoom" id="zoom" aria-label="Zoom">
+          <button type="button" data-z="in" aria-label="Zoom in" title="Zoom in (or Ctrl/⌘ + scroll, or pinch)">+</button>
+          <button type="button" data-z="out" aria-label="Zoom out" title="Zoom out" hidden>−</button>
+          <button type="button" data-z="reset" aria-label="Show the whole island" title="Show the whole island" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
+        </div>
         <div class="tip" id="tip" hidden></div>
         <div class="loading" id="loading">Loading Jersey's roads…</div>
       </div>
@@ -446,6 +459,9 @@ const parentOf = (t, i, reverse = true) => t.arc[i] < 0 ? -1 : (reverse ? G.to(t
 // ---------- drawing ----------
 const cv = $("#map"), hv = $("#hover"), ctx = cv.getContext("2d"), hx = hv.getContext("2d");
 let view = null;
+// zoom: k times the whole-island scale, centred on (cx, cy) in km; lines and markers keep their size on screen
+const Z = { k: 1, cx: null, cy: null };
+const ZMAX = 14;
 function layout() {
   const b = G.bounds;
   const W = $("#wrap").clientWidth;
@@ -453,8 +469,17 @@ function layout() {
   const H = Math.round(W * ratio);
   const dpr = Math.min(3, window.devicePixelRatio || 1);
   for (const c of [cv, hv]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); c.style.height = H + "px"; }
-  const s = W / (b.x1 - b.x0);
-  view = { W, H, dpr, s, px: (x) => (x - b.x0) * s, py: (y) => (b.y1 - y) * s, ix: (px) => px / s + b.x0, iy: (py) => b.y1 - py / s };
+  view = makeView(W, H, dpr, Z);
+  syncZoom();
+}
+// the view for a zoom: kept inside the island's bounds
+function makeView(W, H, dpr, z) {
+  const b = G.bounds, k = Math.max(1, Math.min(ZMAX, z.k)), s0 = W / (b.x1 - b.x0), s = s0 * k;
+  const hw = W / (2 * s), hh = H / (2 * s);
+  const cx = Math.max(b.x0 + hw, Math.min(b.x1 - hw, z.cx ?? (b.x0 + b.x1) / 2));
+  const cy = Math.max(b.y0 + hh, Math.min(b.y1 - hh, z.cy ?? (b.y0 + b.y1) / 2));
+  const ox = cx - hw, oy = cy + hh;
+  return { W, H, dpr, s, k, cx, cy, ox, oy, px: (x) => (x - ox) * s, py: (y) => (oy - y) * s, ix: (px) => px / s + ox, iy: (py) => oy - py / s };
 }
 function ringPath(c, ring) { ring.forEach(([x, y], i) => i ? c.lineTo(view.px(x), view.py(y)) : c.moveTo(view.px(x), view.py(y))); c.closePath(); }
 function drawLand() {
@@ -1041,7 +1066,7 @@ function legendRoads() {
 
 // ---------- hover ----------
 function onMove(ev) {
-  if (!current || !G || ev.pointerType === "touch") return;
+  if (!current || !G || ev.pointerType === "touch" || gesture) return;
   showInfo(ev.clientX, ev.clientY, false);
 }
 // the time and route from the junction nearest a point, in the info box; on touch the box has an action button
@@ -1049,7 +1074,7 @@ let tapped = -1;
 function showInfo(clientX, clientY, touch) {
   const r = cv.getBoundingClientRect();
   const mx = clientX - r.left, my = clientY - r.top;
-  const i = nearestNode(G, view.ix(mx), view.iy(my), touch ? 1.5 : 0.8);
+  const i = nearestNode(G, view.ix(mx), view.iy(my), (touch ? 1.5 : 0.8) / view.k);
   hx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0); hx.clearRect(0, 0, view.W, view.H);
   const tip = $("#tip");
   tip.classList.toggle("touch", touch);
@@ -1101,11 +1126,12 @@ function nameFor(i) {
 // a click acts at once; a tap shows the info box first (but adds a traveller at once in Meet up)
 let lastPointer = "mouse";
 function onClick(ev) {
+  if (Date.now() < noClickUntil) return; // the end of a drag or a pinch
   if (lastPointer === "touch" && (S.kind !== "meet" || S.everyone)) { tapped = showInfo(ev.clientX, ev.clientY, true); return; }
   if (S.kind === "meet" && S.everyone) return; // the whole island is already meeting
   const r = cv.getBoundingClientRect();
   const x = view.ix(ev.clientX - r.left), y = view.iy(ev.clientY - r.top);
-  const i = nearestNode(G, x, y, 1.5); if (i < 0) return;
+  const i = nearestNode(G, x, y, 1.5 / view.k); if (i < 0) return;
   actAt(i, x, y);
 }
 function actAt(i, x, y) {
@@ -1123,6 +1149,99 @@ function actAt(i, x, y) {
     setDest(G.x[i], G.y[i], nm);
   }
   render();
+}
+
+// ---------- zoom and pan ----------
+// While a gesture runs, the canvases are stretched with a CSS transform (instant); when it stops, the map is redrawn.
+let gesture = null, noClickUntil = 0, commitTimer = 0, pending = null;
+const pointers = new Map();
+function preview(z) {
+  pending = z;
+  const v = makeView(view.W, view.H, view.dpr, z), r = v.s / view.s;
+  const tx = (view.ox - v.ox) * v.s, ty = (v.oy - view.oy) * v.s;
+  for (const c of [cv, hv]) c.style.transform = `translate(${tx}px, ${ty}px) scale(${r})`;
+  $("#tip").hidden = true;
+}
+function commit() {
+  clearTimeout(commitTimer);
+  if (!pending) return;
+  const v = makeView(view.W, view.H, view.dpr, pending);
+  Object.assign(Z, { k: v.k, cx: v.cx, cy: v.cy });
+  pending = null;
+  for (const c of [cv, hv]) c.style.transform = "";
+  view = v;
+  syncZoom(); render();
+}
+// zoom by a factor, keeping the point under (mx, my) on the map (px in the canvas) where it is
+function zoomed(base, factor, mx, my) {
+  const v = makeView(view.W, view.H, view.dpr, base), X = v.ix(mx), Y = v.iy(my);
+  const k = Math.max(1, Math.min(ZMAX, v.k * factor)), s = v.s * k / v.k;
+  return { k, cx: X - mx / s + view.W / (2 * s), cy: Y + my / s - view.H / (2 * s) };
+}
+function zoomBy(factor) { const z = zoomed(Z, factor, view.W / 2, view.H / 2); Object.assign(Z, z); view = makeView(view.W, view.H, view.dpr, Z); syncZoom(); render(); }
+function syncZoom() {
+  if (!view) return;
+  $("#zoom [data-z=reset]").hidden = view.k <= 1.001;
+  $("#zoom [data-z=in]").disabled = view.k >= ZMAX - 0.01;
+  $("#zoom [data-z=out]").hidden = view.k <= 1.001;
+  cv.classList.toggle("zoomed", view.k > 1.001);
+}
+function initZoom() {
+  $("#zoom").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-z]"); if (!b) return;
+    if (b.dataset.z === "reset") { Object.assign(Z, { k: 1, cx: null, cy: null }); view = makeView(view.W, view.H, view.dpr, Z); syncZoom(); render(); }
+    else zoomBy(b.dataset.z === "in" ? 2 : 0.5);
+  });
+  // Ctrl/⌘ + scroll, and trackpad pinches (which arrive as Ctrl + scroll); plain scrolling still scrolls the page
+  cv.addEventListener("wheel", (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault();
+    const r = cv.getBoundingClientRect();
+    preview(zoomed(pending || Z, Math.exp(-e.deltaY * 0.006), e.clientX - r.left, e.clientY - r.top));
+    clearTimeout(commitTimer); commitTimer = setTimeout(commit, 160);
+  }, { passive: false });
+  cv.addEventListener("pointerdown", (e) => {
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const r = cv.getBoundingClientRect();
+    if (e.pointerType === "touch" && pointers.size === 2) {
+      // two fingers: pinch to zoom, move to pan
+      const [a, b] = [...pointers.values()];
+      gesture = { kind: "pinch", base: { ...Z }, d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, m0: { x: (a.x + b.x) / 2 - r.left, y: (a.y + b.y) / 2 - r.top } };
+    } else if (e.pointerType === "mouse" && e.button === 0 && view.k > 1.001) {
+      gesture = { kind: "drag", base: { ...Z }, x0: e.clientX, y0: e.clientY, moved: false };
+      cv.setPointerCapture(e.pointerId);
+    }
+  });
+  cv.addEventListener("pointermove", (e) => {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (!gesture) return;
+    if (gesture.kind === "drag") {
+      const dx = e.clientX - gesture.x0, dy = e.clientY - gesture.y0;
+      if (!gesture.moved && Math.hypot(dx, dy) < 4) return;
+      gesture.moved = true; cv.classList.add("dragging");
+      const v = makeView(view.W, view.H, view.dpr, gesture.base);
+      preview({ k: v.k, cx: v.cx - dx / v.s, cy: v.cy + dy / v.s });
+    } else if (gesture.kind === "pinch" && pointers.size >= 2) {
+      const [a, b] = [...pointers.values()], r = cv.getBoundingClientRect();
+      const d = Math.hypot(a.x - b.x, a.y - b.y), m = { x: (a.x + b.x) / 2 - r.left, y: (a.y + b.y) / 2 - r.top };
+      // zoom about where the pinch started, then follow the fingers
+      const z = zoomed(gesture.base, d / gesture.d0, gesture.m0.x, gesture.m0.y);
+      const s = makeView(view.W, view.H, view.dpr, gesture.base).s * z.k / Math.max(1, Math.min(ZMAX, gesture.base.k));
+      preview({ k: z.k, cx: z.cx - (m.x - gesture.m0.x) / s, cy: z.cy + (m.y - gesture.m0.y) / s });
+    }
+  });
+  const end = (e) => {
+    pointers.delete(e.pointerId);
+    if (!gesture) return;
+    if (gesture.kind === "drag" && !gesture.moved) { gesture = null; return; }
+    if (gesture.kind === "pinch" && pointers.size >= 2) return;
+    gesture = null; cv.classList.remove("dragging");
+    noClickUntil = Date.now() + 150;
+    commit();
+  };
+  cv.addEventListener("pointerup", end);
+  cv.addEventListener("pointercancel", end);
 }
 
 // ---------- controls ----------
@@ -1209,6 +1328,7 @@ function initControls() {
   $("#live").addEventListener("change", (e) => { S.live = e.target.checked; setHash(); render(); });
   $("#liveday").addEventListener("change", (e) => { if (!e.target.value) return; S.liveDay = e.target.value; setHash(); render(); });
   cv.addEventListener("pointermove", onMove);
+  initZoom();
   cv.addEventListener("pointerdown", (ev) => { lastPointer = ev.pointerType; });
   cv.addEventListener("pointerleave", (ev) => { if (ev.pointerType === "touch") return; $("#tip").hidden = true; hx.clearRect(0, 0, view.W, view.H); });
   cv.addEventListener("click", onClick);
